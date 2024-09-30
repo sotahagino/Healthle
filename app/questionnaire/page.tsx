@@ -1,23 +1,18 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import QuestionnaireComponentBase from "../../components/pages-questionnaire";
 
-export default function QuestionnairePage({ concern: initialConcern }: { concern: string }) {
-  const [concern, setConcern] = useState<string | null>(initialConcern);
-  const searchParams = useSearchParams();
+interface QuestionnairePageProps {
+  searchParams: { concern?: string };
+}
 
-  useEffect(() => {
-    const concernParam = searchParams.get('concern');
-    if (concernParam) {
-      setConcern(concernParam);
-    }
-  }, [searchParams]);
+export default function QuestionnairePage({ searchParams }: QuestionnairePageProps) {
+  const concern = searchParams.concern ?? null;
 
   return (
     <div className="min-h-screen bg-[#F9F9F9] text-[#333333] font-sans">
-      {concern && <QuestionnaireComponentBase concern={concern} />}
+      <Suspense fallback={<div>Loading...</div>}>
+        {concern && <QuestionnaireComponentBase concern={concern} />}
+      </Suspense>
     </div>
   );
 }
