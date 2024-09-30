@@ -4,10 +4,6 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import QuestionnaireComponentBase from "../../components/pages-questionnaire";
 
-interface QuestionnaireComponentBaseProps {
-  concern: string;
-}
-
 export default function QuestionnairePage({ concern: initialConcern }: { concern: string }) {
   const [concern, setConcern] = useState<string | null>(initialConcern);
   const searchParams = useSearchParams();
