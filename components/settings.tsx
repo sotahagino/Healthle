@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { ChevronRight, Users, Mail, FileText, X } from 'lucide-react'
@@ -75,7 +74,7 @@ export default function SettingsPage() {
       return
     }
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
     })
@@ -93,7 +92,7 @@ export default function SettingsPage() {
     e.preventDefault()
     setError('')
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })

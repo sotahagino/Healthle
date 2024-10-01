@@ -1,4 +1,3 @@
-
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef, useMemo, ReactNode } from 'react'
@@ -61,7 +60,7 @@ const MessageComponent = React.memo(
             )
           ) : (
             <Image
-            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/doctor100.png`}
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/doctor100.png`}
               alt="Doctor Icon"
               width={24}
               height={24}
@@ -81,20 +80,20 @@ const MessageComponent = React.memo(
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeRaw]}
           components={{
-            h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
-            h2: ({ node, ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
-            h3: ({ node, ...props }) => <h3 className="text-lg font-medium mt-4 mb-2" {...props} />,
-            h4: ({ node, ...props }) => <h4 className="text-base font-medium mt-3 mb-2" {...props} />,
-            h5: ({ node, ...props }) => <h5 className="text-sm font-medium mt-2 mb-1" {...props} />,
-            h6: ({ node, ...props }) => <h6 className="text-xs font-medium mt-2 mb-1" {...props} />,
-            p: ({ node, ...props }) => <p className="my-2 leading-relaxed" {...props} />,
-            ul: ({ node, ...props }) => <ul className="list-disc pl-6 my-2 space-y-1" {...props} />,
-            ol: ({ node, ...props }) => <ol className="list-decimal pl-6 my-2 space-y-1" {...props} />,
-            li: ({ node, ...props }) => <li className="my-1" {...props} />,
-            a: ({ node, ...props }) => (
+            h1: (props) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
+            h2: (props) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
+            h3: (props) => <h3 className="text-lg font-medium mt-4 mb-2" {...props} />,
+            h4: (props) => <h4 className="text-base font-medium mt-3 mb-2" {...props} />,
+            h5: (props) => <h5 className="text-sm font-medium mt-2 mb-1" {...props} />,
+            h6: (props) => <h6 className="text-xs font-medium mt-2 mb-1" {...props} />,
+            p: (props) => <p className="my-2 leading-relaxed" {...props} />,
+            ul: (props) => <ul className="list-disc pl-6 my-2 space-y-1" {...props} />,
+            ol: (props) => <ol className="list-decimal pl-6 my-2 space-y-1" {...props} />,
+            li: (props) => <li className="my-1" {...props} />,
+            a: (props) => (
               <a className="text-[#002341] hover:underline" target="_blank" rel="noopener noreferrer" {...props} />
             ),
-            blockquote: ({ node, ...props }) => (
+            blockquote: (props) => (
               <blockquote className="border-l-4 border-gray-300 pl-4 italic my-2" {...props} />
             ),
             code: ({ className, children, ...props }) => {
@@ -111,9 +110,9 @@ const MessageComponent = React.memo(
                 </code>
               )
             },
-            hr: ({ node, ...props }) => <hr className="my-4 border-t border-gray-300" {...props} />,
-            em: ({ node, ...props }) => <em className="italic text-gray-700" {...props} />,
-            strong: ({ node, ...props }) => <strong className="font-bold text-gray-900" {...props} />,
+            hr: (props) => <hr className="my-4 border-t border-gray-300" {...props} />,
+            em: (props) => <em className="italic text-gray-700" {...props} />,
+            strong: (props) => <strong className="font-bold text-gray-900" {...props} />,
           }}
         >
           {message.text}
@@ -132,8 +131,6 @@ export default function ChatInterface() {
   const [suggestionContent, setSuggestionContent] = useState<SuggestionContent | null>(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showSurveyModal, setShowSurveyModal] = useState(false)
-  const [surveyAnswer, setSurveyAnswer] = useState<string | null>(null)
-  const [showRegistrationPrompt, setShowRegistrationPrompt] = useState(false)
   const [showRegistrationModal, setShowRegistrationModal] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -142,29 +139,28 @@ export default function ChatInterface() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const searchParams = useSearchParams()
   const consultationId = searchParams.get('id')
-  const concern = searchParams.get('concern')
   const messageIdRef = useRef(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const [threadID, setThreadID] = useState<string | null>(null)
   const [assistantInstructions, setAssistantInstructions] = useState<string | null>(null)
 
-  const handleCloseRegistration = () => {
-    setShowRegistrationModal(false)
-  }
-
-  useEffect(() => {
-    checkLoginStatus()
-    if (consultationId) {
-      fetchChatHistory(consultationId)
-    }
-    fetchLogoUrl()
-  }, [consultationId])
-
   const checkLoginStatus = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     setIsLoggedIn(!!session)
   }
+
+  useEffect(() => {
+    const initializeChat = async () => {
+      await checkLoginStatus();
+      if (consultationId) {
+        await fetchChatHistory(consultationId);
+      }
+      await fetchLogoUrl();
+    };
+
+    initializeChat();
+  }, [consultationId]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -232,7 +228,7 @@ export default function ChatInterface() {
     }
   }
 
-  const saveMessageToDatabase = async (message: Message) => {
+  const saveMessageToDatabase = useCallback(async (message: Message) => {
     if (!consultationId) {
       console.error('No consultation ID available')
       return
@@ -241,7 +237,7 @@ export default function ChatInterface() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       const uid = user ? user.id : null
-
+  
       const { data, error } = await supabase
         .from('chat_messages')
         .insert({
@@ -261,7 +257,7 @@ export default function ChatInterface() {
     } catch (error) {
       console.error('Error in saveMessageToDatabase:', error)
     }
-  }
+  }, [consultationId])
 
   const addMessage = useCallback((text: string, sender: 'user' | 'ai', isQuestion: boolean = false) => {
     messageIdRef.current += 1
@@ -273,14 +269,13 @@ export default function ChatInterface() {
     }
     setMessages(prevMessages => [...prevMessages, newMessage])
     
-    // ユーザーメッセージのみを即座に保存
     if (sender === 'user') {
       saveMessageToDatabase(newMessage)
         .catch(error => console.error('Error saving message after adding:', error))
     }
   
     return newMessage.id
-  }, [consultationId])
+  }, [saveMessageToDatabase])
 
   const updateMessage = useCallback((id: string, text: string) => {
     setMessages(prevMessages =>
@@ -354,7 +349,6 @@ export default function ChatInterface() {
       }
 
       if (accumulatedResponse) {
-        // 最終的なAI応答のみをデータベースに保存
         await saveMessageToDatabase({
           id: messageId,
           text: accumulatedResponse,
@@ -400,7 +394,7 @@ export default function ChatInterface() {
     e.preventDefault()
     if (inputMessage.trim() === '' || isLoading) return
   
-    const userMessageId = addMessage(inputMessage, 'user', true)
+    addMessage(inputMessage, 'user', true)
     setInputMessage('')
     setIsLoading(true)
   
@@ -426,7 +420,6 @@ export default function ChatInterface() {
   }
 
   const handleSurveySubmit = async (answer: string) => {
-    setSurveyAnswer(answer)
     setShowSurveyModal(false)
 
     try {
@@ -451,11 +444,6 @@ export default function ChatInterface() {
     }
   }
 
-  const handleRegistration = () => {
-    setShowRegistrationModal(true)
-    setShowRegistrationPrompt(false)
-  }
-
   const handleRegistrationSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setRegistrationError(null)
@@ -476,7 +464,6 @@ export default function ChatInterface() {
       if (authData.user) {
         const uid = authData.user.id
 
-        // chat_messagesテーブルの更新
         const { error: chatError } = await supabase
           .from('chat_messages')
           .update({ uid: uid })
@@ -484,7 +471,6 @@ export default function ChatInterface() {
 
         if (chatError) throw chatError
 
-        // consultation_dataテーブルの更新
         const { error: consultationError } = await supabase
           .from('consultation_data')
           .update({ uid: uid })
@@ -495,12 +481,10 @@ export default function ChatInterface() {
         console.log('User registered and data updated successfully:', authData.user)
         setShowRegistrationModal(false)
         setIsLoggedIn(true)
-        // ログイン状態にする
         await supabase.auth.signInWithPassword({
           email,
           password,
         })
-        // TODO: ユーザー登録成功後の追加の処理（例：ウェルカムメッセージの表示など）
       }
     } catch (error) {
       console.error('Error during registration or data update:', error)
@@ -749,37 +733,37 @@ export default function ChatInterface() {
                 />
               </div>
               <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                    パスワード（確認）
-                  </label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#002341] focus:border-[#002341]"
-                  />
-                </div>
-                {registrationError && (
-                  <p className="text-red-500 text-sm">{registrationError}</p>
-                )}
-                <button
-                  type="submit"
-                  className="w-full p-2 bg-[#002341] text-white rounded-lg hover:bg-opacity-90 transition-colors"
-                >
-                  登録する
-                </button>
-              </form>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                  パスワード（確認）
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#002341] focus:border-[#002341]"
+                />
+              </div>
+              {registrationError && (
+                <p className="text-red-500 text-sm">{registrationError}</p>
+              )}
               <button
-                onClick={() => setShowRegistrationModal(false)}
-                className="w-full p-2 mt-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                type="submit"
+                className="w-full p-2 bg-[#002341] text-white rounded-lg hover:bg-opacity-90 transition-colors"
               >
-                今はしない
+                登録する
               </button>
-            </div>
+            </form>
+            <button
+              onClick={() => setShowRegistrationModal(false)}
+              className="w-full p-2 mt-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              今はしない
+            </button>
           </div>
-        )}
-      </>
-    )
-  }
+        </div>
+      )}
+    </>
+  )
+}

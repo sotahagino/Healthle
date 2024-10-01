@@ -1,4 +1,3 @@
-
 'use client'
 
 import React, { useState, useEffect } from 'react'
@@ -31,7 +30,6 @@ export function ImprovedHealthleDashboardComponent() {
   const [selectedConcern, setSelectedConcern] = useState<string | null>(null)
   const [isTyping, setIsTyping] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -48,7 +46,7 @@ export function ImprovedHealthleDashboardComponent() {
         setSelectedGenre(genres[0].id)
       }
     }
-  }, [genres])
+  }, [genres, selectedGenre])
 
   useEffect(() => {
     if (selectedGenre) {
@@ -138,10 +136,6 @@ export function ImprovedHealthleDashboardComponent() {
     setSearchTerm(concern)
     setSelectedConcern(concern)
     setIsTyping(false)
-  }
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen)
   }
 
   const handleStartConsultation = async (e: React.FormEvent) => {
@@ -253,7 +247,7 @@ export function ImprovedHealthleDashboardComponent() {
           {isTyping && suggestions.length > 0 && (
             <div className="mt-2 bg-white border border-gray-200 rounded-md shadow-lg">
               <h3 className="px-4 py-2 text-sm font-semibold text-gray-600 border-b border-gray-200">
-                "{searchTerm}"に関連する良く相談される内容
+                &quot;{searchTerm}&quot;に関連する良く相談される内容
               </h3>
               <ul>
                 {suggestions.map((concern, index) => (

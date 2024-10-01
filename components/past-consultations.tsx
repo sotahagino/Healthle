@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Calendar, Clock, ChevronRight, X } from 'lucide-react'
@@ -23,14 +23,14 @@ function AuthModal({ onClose, onAuth }: { onClose: () => void, onAuth: () => voi
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
+    setAuthError(null)
 
     if (!isLogin && password !== confirmPassword) {
-      setError('パスワードが一致しません。')
+      setAuthError('パスワードが一致しません。')
       return
     }
 
@@ -44,7 +44,11 @@ function AuthModal({ onClose, onAuth }: { onClose: () => void, onAuth: () => voi
       }
       onAuth()
     } catch (error) {
-      setError(isLogin ? 'ログインに失敗しました。' : '登録に失敗しました。')
+      if (error instanceof Error) {
+        setAuthError(isLogin ? `ログインに失敗しました: ${error.message}` : `登録に失敗しました: ${error.message}`)
+      } else {
+        setAuthError(isLogin ? 'ログインに失敗しました。' : '登録に失敗しました。')
+      }
     }
   }
 
@@ -93,7 +97,7 @@ function AuthModal({ onClose, onAuth }: { onClose: () => void, onAuth: () => voi
               />
             </div>
           )}
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {authError && <p className="text-red-500 text-sm">{authError}</p>}
           <button
             type="submit"
             className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#2C4179] hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2C4179]"
@@ -122,11 +126,7 @@ export default function PastConsultations() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    checkLoginStatus()
-  }, [])
-
-  async function checkLoginStatus() {
+  const checkLoginStatus = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     setIsLoggedIn(!!user)
     if (user) {
@@ -134,7 +134,11 @@ export default function PastConsultations() {
     } else {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    checkLoginStatus()
+  }, [checkLoginStatus])
 
   async function fetchPastConsultations() {
     try {

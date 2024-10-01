@@ -1,7 +1,6 @@
-
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowLeft, ChevronRight, Loader2, Menu } from 'lucide-react';
 import Image from 'next/image';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
@@ -63,19 +62,7 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
 
   const totalQuestions = 15; // Set the total number of questions to 15
 
-  useEffect(() => {
-    fetchLogoUrl();
-    processBackgroundTasks();
-    callNewApi();
-  }, []);
-
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [currentQuestionIndex]);
-
-  async function fetchLogoUrl() {
+  const fetchLogoUrl = useCallback(async () => {
     try {
       const { data } = await supabase
         .storage
@@ -91,55 +78,18 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
       console.error('Error fetching logo URL:', error);
       setError('ロゴの取得に失敗しました。');
     }
-  }
+  }, []);
 
-  async function processBackgroundTasks() {
-    if (hasCalledApi.current) return;
-
-    hasCalledApi.current = true;
-
+  const addDynamicQuestions = useCallback(async (apiData: Record<string, unknown>) => {
     try {
-      await callApi();
-    } catch (error) {
-      console.error('Error in background tasks:', error);
-      setError('バックグラウンド処理中にエラーが発生しました。');
-      hasCalledApi.current = false;
-    }
-  }
-
-  async function callNewApi() {
-    if (hasCalledNewApi.current) return;
-
-    hasCalledNewApi.current = true;
-
-    try {
-      const response = await fetch(process.env.NEXT_PUBLIC_SISTEMPROMPT_API_URL!, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: concern
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('New API response:', data);
-      setApiResponse(data.message);
-    } catch (error) {
-      console.error('Error calling new API:', error);
-      setError('新しいAPIの呼び出しに失敗しました。');
-      hasCalledNewApi.current = false;
-    }
-  }
-
-  async function addDynamicQuestions(apiData: any) {
-    try {
-      const { result, resultq1, resultq2, resultq3, resultq4, resultq5 } = apiData;
+      const { result, resultq1, resultq2, resultq3, resultq4, resultq5 } = apiData as {
+        result: { q1: string; q2: string; q3: string; q4: string; q5: string };
+        resultq1: { choices: string[] };
+        resultq2: { choices: string[] };
+        resultq3: { choices: string[] };
+        resultq4: { choices: string[] };
+        resultq5: { choices: string[] };
+      };
       
       const dynamicQuestions: Question[] = [
         {
@@ -180,11 +130,11 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
       console.error('Error adding dynamic questions:', error);
       setError('動的質問の追加に失敗しました。');
     }
-  }
+  }, []);
 
-  async function callApi() {
-    const concern = searchParams.get('concern');
-    if (!concern) {
+  const callApi = useCallback(async () => {
+    const concernParam = searchParams.get('concern');
+    if (!concernParam) {
       console.error('No concern found in URL parameters');
       setError('相談内容が見つかりません。');
       return;
@@ -197,7 +147,7 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: concern
+          prompt: concernParam
         })
       });
 
@@ -212,7 +162,63 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
       setError('APIの呼び出しに失敗しました。');
       hasCalledApi.current = false;
     }
-  }
+  }, [searchParams, setError, addDynamicQuestions]);
+
+  const processBackgroundTasks = useCallback(async () => {
+    if (hasCalledApi.current) return;
+
+    hasCalledApi.current = true;
+
+    try {
+      await callApi();
+    } catch (error) {
+      console.error('Error in background tasks:', error);
+      setError('バックグラウンド処理中にエラーが発生しました。');
+      hasCalledApi.current = false;
+    }
+  }, [callApi, setError]);
+
+  const callNewApi = useCallback(async () => {
+    if (hasCalledNewApi.current) return;
+
+    hasCalledNewApi.current = true;
+
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_SISTEMPROMPT_API_URL!, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: concern
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('New API response:', data);
+      setApiResponse(data.message);
+    } catch (error) {
+      console.error('Error calling new API:', error);
+      setError('新しいAPIの呼び出しに失敗しました。');
+      hasCalledNewApi.current = false;
+    }
+  }, [concern]);
+
+  useEffect(() => {
+    fetchLogoUrl();
+    processBackgroundTasks();
+    callNewApi();
+  }, [fetchLogoUrl, processBackgroundTasks, callNewApi]);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [currentQuestionIndex]);
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -262,7 +268,7 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
           throw new Error('Consultation ID not found');
         }
   
-        let spromptValue = typeof apiResponse === 'string' ? apiResponse : JSON.stringify(apiResponse);
+        const spromptValue = typeof apiResponse === 'string' ? apiResponse : JSON.stringify(apiResponse);
         
         const insertData: { [key: string]: string | null } = {
           consultation_id: consultationId,

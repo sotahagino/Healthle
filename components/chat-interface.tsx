@@ -7,9 +7,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { useSearchParams } from 'next/navigation'
-import rehypeRaw from 'rehype-raw';
-import remarkGfm from 'remark-gfm';
-
+import rehypeRaw from 'rehype-raw'
+import remarkGfm from 'remark-gfm'
 
 interface CardProps {
   children: ReactNode;
@@ -28,54 +27,10 @@ const CardContent = ({ children, className = '' }: { children: ReactNode; classN
   </div>
 )
 
-/*const formatMarkdown = (text: string) => {
-  const removeDuplicateParagraphs = (content: string) => {
-    const paragraphs = content.split(/\n\s*\n/);
-    const seen = new Set();
-    const result = [];
-    for (const paragraph of paragraphs) {
-      const normalizedParagraph = paragraph.replace(/\s+/g, ' ').trim();
-      if (!seen.has(normalizedParagraph)) {
-        seen.add(normalizedParagraph);
-        result.push(paragraph);
-      }
-    }
-    return result.join('\n\n');
-  };
-  
-  let formattedText = text;
-  // Fix bold formatting issues and remove unnecessary asterisks
-  formattedText = formattedText.replace(/\*{1,2}([^*\n]+?)\*{1,2}/g, '**$1**');
-
-  // Ensure proper spacing for headings and horizontal rules
-  formattedText = formattedText.replace(/^(#{1,6})\s*(.+)$/gm, '$1 $2');
-  formattedText = formattedText.replace(/^---\s*$/gm, '\n---\n');
-
-  // Ensure proper spacing for list items and remove unnecessary bullet points
-  formattedText = formattedText.replace(/^([*-])\s*・?\s*(.+)$/gm, '$1 $2');
-
-  // Remove extra newlines
-  formattedText = formattedText.replace(/\n{3,}/g, '\n\n');
-
-  formattedText = removeDuplicateParagraphs(formattedText);
-
-  // Remove unnecessary periods after list item markers
-  formattedText = formattedText.replace(/^([*-])\.\s/gm, '$1 ');
-
-  // Fix quotes with excessive asterisks
-  formattedText = formattedText.replace(/「\*{1,2}(.+?)\*{1,2}」/g, '「**$1**」');
-
-  // Fix bold text at the beginning of a line
-  formattedText = formattedText.replace(/^[*]{1,2}([^*\n]+?)[*]{1,2}:/gm, '**$1**:');
-
-  return formattedText;
-};
-*/
 const supabase: SupabaseClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
-
 
 interface Message {
   id: string
@@ -105,12 +60,12 @@ const MessageComponent = React.memo(
             )
           ) : (
             <Image
-  src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/doctor100.png`}
-  alt="Doctor Icon"
-  width={24}
-  height={24}
-  className="mr-2"
-/>
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/doctor100.png`}
+              alt="Doctor Icon"
+              width={24}
+              height={24}
+              className="mr-2"
+            />
           )}
           <p className="text-lg font-semibold text-[#002341]">
             {message.sender === 'user'
@@ -121,63 +76,60 @@ const MessageComponent = React.memo(
           </p>
         </div>
         <ReactMarkdown
-  className="prose max-w-none markdown-content"
-  remarkPlugins={[remarkGfm]}
-  rehypePlugins={[rehypeRaw]}
-  components={{
-    h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
-    h2: ({ node, ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
-    h3: ({ node, ...props }) => <h3 className="text-lg font-medium mt-4 mb-2" {...props} />,
-    h4: ({ node, ...props }) => <h4 className="text-base font-medium mt-3 mb-2" {...props} />,
-    h5: ({ node, ...props }) => <h5 className="text-sm font-medium mt-2 mb-1" {...props} />,
-    h6: ({ node, ...props }) => <h6 className="text-xs font-medium mt-2 mb-1" {...props} />,
-    p: ({ node, ...props }) => <p className="my-2 leading-relaxed" {...props} />,
-    ul: ({ node, ...props }) => <ul className="list-disc pl-6 my-2 space-y-1" {...props} />,
-    ol: ({ node, ...props }) => <ol className="list-decimal pl-6 my-2 space-y-1" {...props} />,
-    li: ({ node, ...props }) => <li className="my-1" {...props} />,
-    a: ({ node, ...props }) => (
-      <a className="text-[#002341] hover:underline" target="_blank" rel="noopener noreferrer" {...props} />
-    ),
-    blockquote: ({ node, ...props }) => (
-      <blockquote className="border-l-4 border-gray-300 pl-4 italic my-2" {...props} />
-    ),
-    code: ({ className, children, ...props }) => {
-      const match = /language-(\w+)/.exec(className || '')
-      return match ? (
-        <pre className="bg-gray-100 rounded-md p-4 overflow-x-auto my-2">
-          <code className={className} {...props}>
-            {children}
-          </code>
-        </pre>
-      ) : (
-        <code className="bg-gray-100 rounded px-1 py-0.5" {...props}>
-          {children}
-        </code>
-      )
-    },
-    hr: ({ node, ...props }) => <hr className="my-4 border-t border-gray-300" {...props} />,
-    em: ({ node, ...props }) => <em className="italic text-gray-700" {...props} />,
-    strong: ({ node, ...props }) => <strong className="font-bold text-gray-900" {...props} />,
-  }}
->
-  {message.text}
-</ReactMarkdown>
+          className="prose max-w-none markdown-content"
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeRaw]}
+          components={{
+            h1: ({ ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
+            h2: ({ ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
+            h3: ({ ...props }) => <h3 className="text-lg font-medium mt-4 mb-2" {...props} />,
+            h4: ({ ...props }) => <h4 className="text-base font-medium mt-3 mb-2" {...props} />,
+            h5: ({ ...props }) => <h5 className="text-sm font-medium mt-2 mb-1" {...props} />,
+            h6: ({ ...props }) => <h6 className="text-xs font-medium mt-2 mb-1" {...props} />,
+            p: ({ ...props }) => <p className="my-2 leading-relaxed" {...props} />,
+            ul: ({ ...props }) => <ul className="list-disc pl-6 my-2 space-y-1" {...props} />,
+            ol: ({ ...props }) => <ol className="list-decimal pl-6 my-2 space-y-1" {...props} />,
+            li: ({ ...props }) => <li className="my-1" {...props} />,
+            a: ({ ...props }) => (
+              <a className="text-[#002341] hover:underline" target="_blank" rel="noopener noreferrer" {...props} />
+            ),
+            blockquote: ({ ...props }) => (
+              <blockquote className="border-l-4 border-gray-300 pl-4 italic my-2" {...props} />
+            ),
+            code: ({ className, children, ...props }) => {
+              const match = /language-(\w+)/.exec(className || '')
+              return match ? (
+                <pre className="bg-gray-100 rounded-md p-4 overflow-x-auto my-2">
+                  <code className={className} {...props}>
+                    {children}
+                  </code>
+                </pre>
+              ) : (
+                <code className="bg-gray-100 rounded px-1 py-0.5" {...props}>
+                  {children}
+                </code>
+              )
+            },
+            hr: ({ ...props }) => <hr className="my-4 border-t border-gray-300" {...props} />,
+            em: ({ ...props }) => <em className="italic text-gray-700" {...props} />,
+            strong: ({ ...props }) => <strong className="font-bold text-gray-900" {...props} />,
+          }}
+        >
+          {message.text}
+        </ReactMarkdown>
       </CardContent>
     </Card>
   ),
   (prevProps, nextProps) => prevProps.message.text === nextProps.message.text
-);
+)
 
 export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
-  const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [suggestionContent, setSuggestionContent] = useState<SuggestionContent | null>(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showSurveyModal, setShowSurveyModal] = useState(false)
-  const [surveyAnswer, setSurveyAnswer] = useState<string | null>(null)
-  const [showRegistrationPrompt, setShowRegistrationPrompt] = useState(false)
   const [showRegistrationModal, setShowRegistrationModal] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -188,56 +140,19 @@ export default function ChatInterface() {
   const consultationId = searchParams.get('id')
   const concern = searchParams.get('concern')
   const messageIdRef = useRef(0)
-  const isInitializedRef = useRef(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const [threadID, setThreadID] = useState<string | null>(null)
   const [assistantInstructions, setAssistantInstructions] = useState<string | null>(null)
+  //const [isInitialized, setIsInitialized] = useState(false)
+  const initializationRef = useRef(false)
 
-  const handleCloseRegistration = () => {
-    setShowRegistrationModal(false)
-  }
-
-  useEffect(() => {
-    checkLoginStatus()
-    if (concern && consultationId && !isInitializedRef.current) {
-      isInitializedRef.current = true
-      initializeChat()
-    }
-  }, [concern, consultationId])
-
-  const checkLoginStatus = async () => {
+  const checkLoginStatus = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
     setIsLoggedIn(!!session)
-  }
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
   }, [])
 
-  const fetchLogoUrl = async () => {
-    try {
-      const { data } = await supabase
-        .storage
-        .from('Healthle_image')
-        .getPublicUrl('aicon100.png')
-
-      setLogoUrl(data.publicUrl)
-    } catch (error) {
-      console.error('Error fetching logo URL:', error)
-    }
-  }
-
-  const saveMessageToDatabase = async (message: Message) => {
+  const saveMessageToDatabase = useCallback(async (message: Message) => {
     if (!consultationId) {
       console.error('No consultation ID available')
       return
@@ -266,7 +181,7 @@ export default function ChatInterface() {
     } catch (error) {
       console.error('Error in saveMessageToDatabase:', error)
     }
-  }
+  }, [consultationId])
 
   const addMessage = useCallback((text: string, sender: 'user' | 'ai', isQuestion: boolean = false) => {
     messageIdRef.current += 1
@@ -278,14 +193,13 @@ export default function ChatInterface() {
     }
     setMessages(prevMessages => [...prevMessages, newMessage])
     
-    // ユーザーメッセージのみを即座に保存
     if (sender === 'user') {
       saveMessageToDatabase(newMessage)
         .catch(error => console.error('Error saving message after adding:', error))
     }
   
     return newMessage.id
-  }, [consultationId])
+  }, [saveMessageToDatabase])
 
   const updateMessage = useCallback((id: string, text: string) => {
     setMessages(prevMessages =>
@@ -295,37 +209,7 @@ export default function ChatInterface() {
     )
   }, [])
 
-  const initializeChat = useCallback(async () => {
-    if (!concern || !consultationId) return
-
-    setIsLoading(true)
-    const userMessageId = addMessage(decodeURIComponent(concern), 'user')
-    const loadingMessageId = addMessage('回答を生成中です...', 'ai')
-
-    try {
-      const { data, error } = await supabase
-        .from('consultation_data')
-        .select('*')
-        .eq('consultation_id', consultationId)
-        .single()
-
-      if (error) throw error
-
-      if (data) {
-        setAssistantInstructions(data.sprompt)
-        setThreadID(data.thread_id || null)
-        await streamResponse(data.sprompt, decodeURIComponent(concern), loadingMessageId, data.thread_id)
-      }
-    } catch (error) {
-      console.error('Error fetching consultation data:', error)
-      updateMessage(loadingMessageId, 'データの取得に失敗しました。もう一度お試しください。')
-    } finally {
-      setIsLoading(false)
-      setShowSurveyModal(true)
-    }
-  }, [concern, consultationId, addMessage, updateMessage])
-
-  const streamResponse = async (sprompt: string, message: string, messageId: string, threadId: string | null) => {
+  const streamResponse = useCallback(async (sprompt: string, message: string, messageId: string, threadId: string | null) => {
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_WEBASSISTANT_URL!, {
         method: 'POST',
@@ -389,7 +273,6 @@ export default function ChatInterface() {
       }
   
       if (accumulatedResponse) {
-        // 最終的なAI応答のみをデータベースに保存
         await saveMessageToDatabase({
           id: messageId,
           text: accumulatedResponse,
@@ -404,7 +287,74 @@ export default function ChatInterface() {
       console.error('Error in streamResponse:', error)
       updateMessage(messageId, 'APIからの応答の取得に失敗しました。もう一度お試しください。')
     }
-  }
+  }, [consultationId, saveMessageToDatabase, updateMessage])
+
+  const initializeChat = useCallback(async () => {
+    if (!concern || !consultationId || initializationRef.current) return
+
+    initializationRef.current = true
+    setIsLoading(true)
+    addMessage(decodeURIComponent(concern), 'user')
+    const loadingMessageId = addMessage('回答を生成中です...', 'ai')
+
+    try {
+      const { data, error } = await supabase
+        .from('consultation_data')
+        .select('*')
+        .eq('consultation_id', consultationId)
+        .single()
+
+      if (error) throw error
+
+      if (data) {
+        setAssistantInstructions(data.sprompt)
+        setThreadID(data.thread_id || null)
+        await streamResponse(data.sprompt, decodeURIComponent(concern), loadingMessageId, data.thread_id)
+      }
+    } catch (error) {
+      console.error('Error fetching consultation data:', error)
+      updateMessage(loadingMessageId, 'データの取得に失敗しました。もう一度お試しください。')
+    } finally {
+      setIsLoading(false)
+      setShowSurveyModal(true)
+      //setIsInitialized(true)
+    }
+  }, [concern, consultationId, addMessage, updateMessage, streamResponse])
+
+  useEffect(() => {
+    const initialize = async () => {
+      await checkLoginStatus();
+      if (concern && consultationId && !initializationRef.current) {
+        await initializeChat();
+      }
+    };
+  
+    initialize();
+  }, [checkLoginStatus, initializeChat, concern, consultationId]);
+
+  useEffect(() => {
+    const initialize = async () => {
+      await checkLoginStatus();
+      if (concern && consultationId && !initializationRef.current) {
+        await initializeChat();
+      }
+    };
+  
+    initialize();
+  }, [checkLoginStatus, initializeChat, concern, consultationId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const fetchChatSenntakusi = async (prompt: string) => {
     try {
@@ -435,7 +385,7 @@ export default function ChatInterface() {
     e.preventDefault()
     if (inputMessage.trim() === '' || isLoading) return
   
-    const userMessageId = addMessage(inputMessage, 'user', true)
+    addMessage(inputMessage, 'user', true)
     setInputMessage('')
     setIsLoading(true)
   
@@ -461,7 +411,6 @@ export default function ChatInterface() {
   }
 
   const handleSurveySubmit = async (answer: string) => {
-    setSurveyAnswer(answer)
     setShowSurveyModal(false)
 
     try {
@@ -486,11 +435,6 @@ export default function ChatInterface() {
     }
   }
 
-  const handleRegistration = () => {
-    setShowRegistrationModal(true)
-    setShowRegistrationPrompt(false)
-  }
-
   const handleRegistrationSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setRegistrationError(null)
@@ -511,7 +455,6 @@ export default function ChatInterface() {
       if (authData.user) {
         const uid = authData.user.id
 
-        // chat_messagesテーブルの更新
         const { error: chatError } = await supabase
           .from('chat_messages')
           .update({ uid: uid })
@@ -519,7 +462,6 @@ export default function ChatInterface() {
 
         if (chatError) throw chatError
 
-        // consultation_dataテーブルの更新
         const { error: consultationError } = await supabase
           .from('consultation_data')
           .update({ uid: uid })
@@ -530,12 +472,10 @@ export default function ChatInterface() {
         console.log('User registered and data updated successfully:', authData.user)
         setShowRegistrationModal(false)
         setIsLoggedIn(true)
-        // ログイン状態にする
         await supabase.auth.signInWithPassword({
           email,
           password,
         })
-        // TODO: ユーザー登録成功後の追加の処理（例：ウェルカムメッセージの表示など）
       }
     } catch (error) {
       console.error('Error during registration or data update:', error)
@@ -559,7 +499,6 @@ export default function ChatInterface() {
       <MessageComponent key={message.id} message={message} />
     ))
   }, [messages])
-
 
   return (
     <>
@@ -642,15 +581,13 @@ export default function ChatInterface() {
       <div className="flex flex-col h-screen bg-gray-50">
         <header className="bg-white shadow-sm py-4 px-6 flex items-center justify-between">
           <div className="flex items-center">
-            {logoUrl && (
-              <Image
-                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/aicon100.png`}
-                alt="Healthle Logo"
-                width={40}
-                height={40}
-                className="mr-3"
-              />
-            )}
+            <Image
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/aicon100.png`}
+              alt="Healthle Logo"
+              width={40}
+              height={40}
+              className="mr-3"
+            />
             <div>
               <h1 className="text-2xl font-semibold text-[#002341]">Healthle</h1>
               <p className="text-sm text-gray-500">ヘルスル</p>
@@ -675,6 +612,8 @@ export default function ChatInterface() {
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="w-full bg-[#E6EDF2] text-[#002341] px-4 py-2 rounded-lg text-sm hover:bg-[#D1E0ED] transition-colors flex justify-between items-center"
+                aria-expanded={isDropdownOpen}
+                aria-haspopup="true"
               >
                 <span>質問の候補</span>
                 {isDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -683,12 +622,16 @@ export default function ChatInterface() {
                 <div 
                   ref={suggestionsRef}
                   className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                  role="menu"
+                  aria-orientation="vertical"
+                  aria-labelledby="options-menu"
                 >
                   {Object.values(suggestionContent).map((suggestion, index) => (
                     <button
                       key={index}
                       onClick={() => handleSuggestionClick(suggestion)}
                       className="block w-full text-left px-4 py-2 text-sm text-[#002341] hover:bg-[#E6EDF2] transition-colors"
+                      role="menuitem"
                     >
                       {suggestion}
                     </button>
@@ -723,7 +666,7 @@ export default function ChatInterface() {
       </div>
 
       {showSurveyModal && !isLoggedIn && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 className="text-xl font-semibold mb-4">満足度調査</h2>
             <p className="mb-4">より良いサービスを提供するために、満足度調査へのご協力をお願いします。</p>
@@ -744,13 +687,14 @@ export default function ChatInterface() {
       )}
 
       {showRegistrationModal && !isLoggedIn && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">アカウント登録</h2>
               <button
                 onClick={() => setShowRegistrationModal(false)}
                 className="text-gray-500 hover:text-gray-700"
+                aria-label="閉じる"
               >
                 <X className="w-6 h-6" />
               </button>
