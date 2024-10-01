@@ -58,7 +58,7 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
   const hasCalledApi = useRef(false);
   const hasCalledNewApi = useRef(false);
 
-  const totalQuestions = 13; // Set the total number of questions to 15
+  const totalQuestions = 13; // 静的質問8個 + 動的質問5個
 
   const fetchLogoUrl = useCallback(async () => {
     try {
@@ -236,7 +236,6 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
       }
     });
 
-    // Automatically move to the next question if "特になし" is selected for question 5
     if (currentQuestionIndex === 4 && answer === '特になし') {
       handleNext();
     }
@@ -255,78 +254,81 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
   };
 
   const handleSubmit = async () => {
-    if (answers.length === questions.length) {
-      console.log('Submitted answers:', answers);
-      setError(null);
-      setIsSubmitting(true);
-  
-      try {
-        const consultationId = searchParams.get('id');
-        if (!consultationId) {
-          throw new Error('Consultation ID not found');
-        }
-  
-        const spromptValue = typeof apiResponse === 'string' ? apiResponse : JSON.stringify(apiResponse);
-        
-        const insertData: { [key: string]: string | null } = {
-          consultation_id: consultationId,
-          concern: concern,
-          sprompt: spromptValue || 'No system prompt available'
-        };
-  
-        // Get the current user
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        // Add uid to insertData if user is logged in
-        if (user) {
-          insertData.uid = user.id;
-        } else {
-          insertData.uid = null;
-        }
-  
-        answers.forEach((answer, index) => {
-          insertData[`question_${index + 1}`] = answer.question;
-          insertData[`answer_${index + 1}`] = answer.answer.toString();
-        });
-  
-        for (let i = answers.length + 1; i <= 15; i++) {
-          insertData[`question_${i}`] = '';
-          insertData[`answer_${i}`] = '';
-        }
-  
-        console.log('Preparing to insert data:', insertData);
-  
-        const { data, error } = await supabase
-          .from('consultation_data')
-          .insert([insertData])
-          .select();
-  
-        console.log('Supabase insert response:', { data, error });
-  
-        if (error) {
-          console.error('Supabase error:', error);
-          throw new Error(`データの保存に失敗しました: ${error.message}`);
-        }
-  
-        if (!data || data.length === 0) {
-          console.error('No data returned from insert operation');
-          throw new Error('データが正常に挿入されませんでした。');
-        }
-  
-        console.log('Data inserted successfully:', data);
-        router.push(`/chat?id=${consultationId}&concern=${encodeURIComponent(concern)}`);
-      } catch (error) {
-        console.error('Error in handleSubmit:', error);
-        if (error instanceof Error) {
-          setError(`データの保存に失敗しました: ${error.message}`);
-        } else {
-          setError('データの保存中に予期せぬエラーが発生しました。');
-        }
-      } finally {
-        setIsSubmitting(false);
+    const unansweredQuestions = questions.filter(
+      (question) => !answers.some(answer => answer.question === question.text)
+    );
+
+    if (unansweredQuestions.length > 0) {
+      const unansweredNumbers = unansweredQuestions.map(q => q.id);
+      setError(`以下の質問に回答してください: ${unansweredNumbers.join(', ')}番`);
+      return;
+    }
+
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const consultationId = searchParams.get('id');
+      if (!consultationId) {
+        throw new Error('Consultation ID not found');
       }
-    } else {
-      setError('すべての質問に回答してください。');
+
+      const spromptValue = typeof apiResponse === 'string' ? apiResponse : JSON.stringify(apiResponse);
+      
+      const insertData: { [key: string]: string | null } = {
+        consultation_id: consultationId,
+        concern: concern,
+        sprompt: spromptValue || 'No system prompt available'
+      };
+
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        insertData.uid = user.id;
+      } else {
+        insertData.uid = null;
+      }
+
+      answers.forEach((answer, index) => {
+        insertData[`question_${index + 1}`] = answer.question;
+        insertData[`answer_${index + 1}`] = answer.answer.toString();
+      });
+
+      for (let i = answers.length + 1; i <= 15; i++) {
+        insertData[`question_${i}`] = '';
+        insertData[`answer_${i}`] = '';
+      }
+
+      console.log('Preparing to insert data:', insertData);
+
+      const { data, error } = await supabase
+        .from('consultation_data')
+        .insert([insertData])
+        .select();
+
+      console.log('Supabase insert response:', { data, error });
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw new Error(`データの保存に失敗しました: ${error.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        console.error('No data returned from insert operation');
+        throw new Error('データが正常に挿入されませんでした。');
+      }
+
+      console.log('Data inserted successfully:', data);
+      router.push(`/chat?id=${consultationId}&concern=${encodeURIComponent(concern)}`);
+    } catch (error) {
+      console.error('Error in handleSubmit:', error);
+      if (error instanceof Error) {
+        setError(`データの保存に失敗しました: ${error.message}`);
+      } else {
+        setError('データの保存中に予期せぬエラーが発生しました。');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -373,7 +375,7 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
                   handleNext();
                 }}
                 className={`w-full text-center px-4 py-3 rounded-lg transition-colors ${
-                  answers.find(a => a.question === currentQuestion.text)?.answer === option
+                  answers.find(a =>a.question === currentQuestion.text)?.answer === option
                     ? 'bg-[#2C4179] text-white'
                     : 'bg-[#F8FBFF] text-[#293753] hover:bg-[#E6F3FF]'
                 }`}
