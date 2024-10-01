@@ -30,16 +30,14 @@ interface Answer {
 }
 
 const staticQuestions: Question[] = [
-  { id: 1, text: '年齢', type: 'number', min: 0, max: 120 },
-  { id: 2, text: '性別', type: 'select', options: ['男性', '女性', 'その他', '回答したくない'] },
-  { id: 3, text: '身長（cm）', type: 'number', min: 50, max: 250 },
-  { id: 4, text: '体重（kg）', type: 'number', min: 1, max: 300, step: 0.1 },
-  { id: 5, text: '既往歴および現在の服薬状況', type: 'multiline', allowNone: true },
-  { id: 6, text: '喫煙していますか？', type: 'select', options: ['はい', 'いいえ', '過去に喫煙していた'] },
-  { id: 7, text: '飲酒の頻度', type: 'select', options: ['飲まない', '月1回以下', '月2〜4回', '週2〜3回', '週4回以上'] },
-  { id: 8, text: '週にどれくらい運動していますか？', type: 'select', options: ['運動していない', '週1-2回', '週3回以上'] },
-  { id: 9, text: '現在のストレスレベルを教えてください。', type: 'select', options: ['低い', 'やや低い', 'やや高い', '高い'] },
-  { id: 10, text: '1日の平均睡眠時間', type: 'number', min: 0, max: 24, step: 0.5, unit: '時間' },
+  { id: 1, text: '年代', type: 'select', options: ['10代', '20代', '30代', '40代', '50代', '60代', '70代以上'] },
+  { id: 2, text: '喫煙していますか？', type: 'select', options: ['はい', 'いいえ', '過去に喫煙していた'] },
+  { id: 3, text: '飲酒の頻度', type: 'select', options: ['飲まない', '月1回以下', '月2〜4回', '週2〜3回', '週4回以上'] },
+  { id: 4, text: '週にどれくらい運動していますか？', type: 'select', options: ['運動していない', '週1-2回', '週3回以上'] },
+  { id: 5, text: '現在のストレスレベルを教えてください。', type: 'select', options: ['低い', 'やや低い', 'やや高い', '高い'] },
+  { id: 6, text: '1日の平均睡眠時間', type: 'number', min: 0, max: 24, step: 0.5, unit: '時間' },
+  { id: 7, text: '食生活について教えてください。', type: 'select', options: ['バランスの取れた食事', '偏った食事', '不規則な食事', '外食が多い', '自炊が多い'] },
+  { id: 8, text: '普段の活動レベルを教えてください。', type: 'select', options: ['座り仕事が多い', '立ち仕事が多い', '歩き回ることが多い', '肉体労働が多い', '不規則'] },
 ];
 
 interface QuestionnaireComponentBaseProps {
@@ -60,7 +58,7 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
   const hasCalledApi = useRef(false);
   const hasCalledNewApi = useRef(false);
 
-  const totalQuestions = 15; // Set the total number of questions to 15
+  const totalQuestions = 13; // Set the total number of questions to 15
 
   const fetchLogoUrl = useCallback(async () => {
     try {
