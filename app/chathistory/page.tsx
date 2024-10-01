@@ -1,12 +1,5 @@
-'use client'
-
 import dynamic from 'next/dynamic'
 import type { Metadata } from 'next'
-
-const ChatHistory = dynamic(() => import('@/components/chat-history'), {
-  ssr: false,
-  loading: () => <p>Loading chat history...</p>
-})
 
 export const metadata: Metadata = {
   title: 'チャット履歴 | ヘルスル（Healthle）',
@@ -24,6 +17,10 @@ export const metadata: Metadata = {
     ],
   },
 }
+
+const ChatHistory = dynamic(() => import('@/components/chat-history'), {
+  loading: () => <p>Loading chat history...</p>
+})
 
 export default function ChatHistoryPage() {
   return (

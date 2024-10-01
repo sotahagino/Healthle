@@ -1,5 +1,3 @@
-'use client'
-
 import { Suspense } from 'react';
 import QuestionnaireComponentBase from "@/components/pages-questionnaire";
 import type { Metadata } from 'next'
@@ -8,7 +6,7 @@ interface QuestionnairePageProps {
   searchParams: { concern?: string };
 }
 
-export const generateMetadata = ({ searchParams }: QuestionnairePageProps): Metadata => {
+export async function generateMetadata({ searchParams }: QuestionnairePageProps): Promise<Metadata> {
   const concern = searchParams.concern ?? null;
   return {
     title: `健康質問票 | ヘルスル（Healthle）${concern ? ` - ${concern}` : ''}`,
@@ -26,7 +24,7 @@ export const generateMetadata = ({ searchParams }: QuestionnairePageProps): Meta
       ],
     },
   };
-};
+}
 
 export default function QuestionnairePage({ searchParams }: QuestionnairePageProps) {
   const concern = searchParams.concern ?? null;
