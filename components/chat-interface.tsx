@@ -295,7 +295,7 @@ export default function ChatInterface() {
     initializationRef.current = true
     setIsLoading(true)
     addMessage(decodeURIComponent(concern), 'user')
-    const loadingMessageId = addMessage('回答を作成中です...', 'ai')
+    const loadingMessageId = addMessage('回答を準備中です...', 'ai')
 
     try {
       const { data, error } = await supabase
@@ -389,7 +389,7 @@ export default function ChatInterface() {
     setInputMessage('')
     setIsLoading(true)
   
-    const aiMessageId = addMessage('回答を作成中です...', 'ai')
+    const aiMessageId = addMessage('回答を準備中です...', 'ai')
   
     try {
       await streamResponse(assistantInstructions || '', inputMessage, aiMessageId, threadID)
