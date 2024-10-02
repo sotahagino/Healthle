@@ -201,7 +201,7 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
       setApiResponse(data.message);
     } catch (error) {
       console.error('Error calling new API:', error);
-      setError('新しいAPIの呼び出しに失敗しました。');
+      setError('予期せぬエラーが発生しました。リロードをお願いします。');
       hasCalledNewApi.current = false;
     }
   }, [concern]);

@@ -285,7 +285,7 @@ export default function ChatInterface() {
       }
     } catch (error) {
       console.error('Error in streamResponse:', error)
-      updateMessage(messageId, 'APIからの応答の取得に失敗しました。もう一度お試しください。')
+      updateMessage(messageId, 'データの読み込みに失敗しました。リロードをお願いします。')
     }
   }, [consultationId, saveMessageToDatabase, updateMessage])
 
@@ -295,7 +295,7 @@ export default function ChatInterface() {
     initializationRef.current = true
     setIsLoading(true)
     addMessage(decodeURIComponent(concern), 'user')
-    const loadingMessageId = addMessage('回答を生成中です...', 'ai')
+    const loadingMessageId = addMessage('回答を作成中です...', 'ai')
 
     try {
       const { data, error } = await supabase
@@ -313,7 +313,7 @@ export default function ChatInterface() {
       }
     } catch (error) {
       console.error('Error fetching consultation data:', error)
-      updateMessage(loadingMessageId, 'データの取得に失敗しました。もう一度お試しください。')
+      updateMessage(loadingMessageId, 'データの取得に失敗しました。リロードをお願いします。')
     } finally {
       setIsLoading(false)
       setShowSurveyModal(true)
@@ -389,13 +389,13 @@ export default function ChatInterface() {
     setInputMessage('')
     setIsLoading(true)
   
-    const aiMessageId = addMessage('回答を生成中です...', 'ai')
+    const aiMessageId = addMessage('回答を作成中です...', 'ai')
   
     try {
       await streamResponse(assistantInstructions || '', inputMessage, aiMessageId, threadID)
     } catch (error) {
       console.error('Error sending message:', error)
-      updateMessage(aiMessageId, 'エラーが発生しました。もう一度お試しください。')
+      updateMessage(aiMessageId, 'エラーが発生しました。リロードをお願いします。')
     } finally {
       setIsLoading(false)
     }
