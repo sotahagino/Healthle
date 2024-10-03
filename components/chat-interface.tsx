@@ -143,8 +143,6 @@ export default function ChatInterface() {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const [threadID, setThreadID] = useState<string | null>(null)
-  const [assistantInstructions, setAssistantInstructions] = useState<string | null>(null)
-  //const [isInitialized, setIsInitialized] = useState(false)
   const initializationRef = useRef(false)
 
   const checkLoginStatus = useCallback(async () => {
@@ -209,7 +207,7 @@ export default function ChatInterface() {
     )
   }, [])
 
-  const streamResponse = useCallback(async (sprompt: string, message: string, messageId: string, threadId: string | null) => {
+  const streamResponse = useCallback(async (message: string, messageId: string, threadId: string | null) => {
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_WEBASSISTANT_URL!, {
         method: 'POST',
@@ -217,7 +215,6 @@ export default function ChatInterface() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sprompt: sprompt || "",
           message: message || "",
           threadId: threadId || "",
         }),
@@ -307,9 +304,8 @@ export default function ChatInterface() {
       if (error) throw error
 
       if (data) {
-        setAssistantInstructions(data.sprompt)
         setThreadID(data.thread_id || null)
-        await streamResponse(data.sprompt, decodeURIComponent(concern), loadingMessageId, data.thread_id)
+        await streamResponse(decodeURIComponent(concern), loadingMessageId, data.thread_id)
       }
     } catch (error) {
       console.error('Error fetching consultation data:', error)
@@ -317,20 +313,8 @@ export default function ChatInterface() {
     } finally {
       setIsLoading(false)
       setShowSurveyModal(true)
-      //setIsInitialized(true)
     }
   }, [concern, consultationId, addMessage, updateMessage, streamResponse])
-
-  useEffect(() => {
-    const initialize = async () => {
-      await checkLoginStatus();
-      if (concern && consultationId && !initializationRef.current) {
-        await initializeChat();
-      }
-    };
-  
-    initialize();
-  }, [checkLoginStatus, initializeChat, concern, consultationId]);
 
   useEffect(() => {
     const initialize = async () => {
@@ -392,7 +376,7 @@ export default function ChatInterface() {
     const aiMessageId = addMessage('回答を準備中です...', 'ai')
   
     try {
-      await streamResponse(assistantInstructions || '', inputMessage, aiMessageId, threadID)
+      await streamResponse(inputMessage, aiMessageId, threadID)
     } catch (error) {
       console.error('Error sending message:', error)
       updateMessage(aiMessageId, 'エラーが発生しました。リロードをお願いします。')

@@ -15,29 +15,21 @@ const supabase: SupabaseClient = createClient(
 interface Question {
   id: number;
   text: string;
-  type: 'number' | 'select' | 'multiline' | 'select-with-other';
-  options?: string[];
-  min?: number;
-  max?: number;
-  step?: number;
-  unit?: string;
-  allowNone?: boolean;
+  type: 'select' | 'multi-select-with-other';
+  options: string[];
 }
 
 interface Answer {
   question: string;
-  answer: string | number | string[];
+  answer: string | string[];
 }
 
 const staticQuestions: Question[] = [
-  { id: 1, text: '年代', type: 'select', options: ['10代', '20代', '30代', '40代', '50代', '60代', '70代以上'] },
-  { id: 2, text: '喫煙していますか？', type: 'select', options: ['はい', 'いいえ', '過去に喫煙していた'] },
-  { id: 3, text: '飲酒の頻度', type: 'select', options: ['飲まない', '月1回以下', '月2〜4回', '週2〜3回', '週4回以上'] },
-  { id: 4, text: '週にどれくらい運動していますか？', type: 'select', options: ['運動していない', '週1-2回', '週3回以上'] },
-  { id: 5, text: '現在のストレスレベルを教えてください。', type: 'select', options: ['低い', 'やや低い', 'やや高い', '高い'] },
-  { id: 6, text: '1日の平均睡眠時間', type: 'number', min: 0, max: 24, step: 0.5, unit: '時間' },
-  { id: 7, text: '食生活について教えてください。', type: 'select', options: ['バランスの取れた食事', '偏った食事', '不規則な食事', '外食が多い', '自炊が多い'] },
-  { id: 8, text: '普段の活動レベルを教えてください。', type: 'select', options: ['座り仕事が多い', '立ち仕事が多い', '歩き回ることが多い', '肉体労働が多い', '不規則'] },
+  { id: 1, text: '（対象者）の年代', type: 'select', options: ['乳幼児', '小学生', '10代', '20代', '30代', '40代', '50代', '60代', '70代以上'] },
+  { id: 2, text: '相談の目的を教えてください。', type: 'multi-select-with-other', options: ['症状に関する情報が欲しい', '対策が知りたい', '原因が知りたい'] },
+  { id: 3, text: '悩み始めたのはいつ頃ですか？', type: 'select', options: ['最近1週間以内', '1ヶ月以内', '3ヶ月以内', '1年以上前'] },
+  { id: 4, text: 'あなたの生活習慣で取り組めていないと思うものを選択してください。', type: 'multi-select-with-other', options: ['睡眠', '飲酒', '喫煙', '食生活', '運動', 'ストレス'] },
+  { id: 5, text: '今回の相談以外に、健康に関する悩みや不調はありますか。', type: 'multi-select-with-other', options: ['睡眠不足', '頭痛', '過度なストレス', '特定の疾患・疾病', '悩みはない'] },
 ];
 
 interface QuestionnaireComponentBaseProps {
@@ -50,15 +42,12 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<Question[]>(staticQuestions);
-  const [apiResponse, setApiResponse] = useState<string | null>(null);
+  const [questions] = useState<Question[]>(staticQuestions);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const searchParams = useSearchParams();
-  const hasCalledApi = useRef(false);
-  const hasCalledNewApi = useRef(false);
 
-  const totalQuestions = 13; // 静的質問8個 + 動的質問5個
+  const totalQuestions = questions.length;
 
   const fetchLogoUrl = useCallback(async () => {
     try {
@@ -78,139 +67,9 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
     }
   }, []);
 
-  const addDynamicQuestions = useCallback(async (apiData: Record<string, unknown>) => {
-    try {
-      const { result, resultq1, resultq2, resultq3, resultq4, resultq5 } = apiData as {
-        result: { q1: string; q2: string; q3: string; q4: string; q5: string };
-        resultq1: { choices: string[] };
-        resultq2: { choices: string[] };
-        resultq3: { choices: string[] };
-        resultq4: { choices: string[] };
-        resultq5: { choices: string[] };
-      };
-      
-      const dynamicQuestions: Question[] = [
-        {
-          id: staticQuestions.length + 1,
-          text: result.q1,
-          type: 'select-with-other',
-          options: resultq1.choices,
-        },
-        {
-          id: staticQuestions.length + 2,
-          text: result.q2,
-          type: 'select-with-other',
-          options: resultq2.choices,
-        },
-        {
-          id: staticQuestions.length + 3,
-          text: result.q3,
-          type: 'select-with-other',
-          options: resultq3.choices,
-        },
-        {
-          id: staticQuestions.length + 4,
-          text: result.q4,
-          type: 'select-with-other',
-          options: resultq4.choices,
-        },
-        {
-          id: staticQuestions.length + 5,
-          text: result.q5,
-          type: 'select-with-other',
-          options: resultq5.choices,
-        },
-      ];
-
-      setQuestions(prevQuestions => [...prevQuestions, ...dynamicQuestions]);
-      console.log('Dynamic questions added successfully');
-    } catch (error) {
-      console.error('Error adding dynamic questions:', error);
-      setError('動的質問の追加に失敗しました。');
-    }
-  }, []);
-
-  const callApi = useCallback(async () => {
-    const concernParam = searchParams.get('concern');
-    if (!concernParam) {
-      console.error('No concern found in URL parameters');
-      setError('相談内容が見つかりません。');
-      return;
-    }
-
-    try {
-      const response = await fetch(process.env.NEXT_PUBLIC_SITUMONNHYOUWEB_API_URL!, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: concernParam
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      await addDynamicQuestions(data);
-    } catch (error) {
-      console.error('Error calling API:', error);
-      setError('APIの呼び出しに失敗しました。');
-      hasCalledApi.current = false;
-    }
-  }, [searchParams, setError, addDynamicQuestions]);
-
-  const processBackgroundTasks = useCallback(async () => {
-    if (hasCalledApi.current) return;
-
-    hasCalledApi.current = true;
-
-    try {
-      await callApi();
-    } catch (error) {
-      console.error('Error in background tasks:', error);
-      setError('バックグラウンド処理中にエラーが発生しました。');
-      hasCalledApi.current = false;
-    }
-  }, [callApi, setError]);
-
-  const callNewApi = useCallback(async () => {
-    if (hasCalledNewApi.current) return;
-
-    hasCalledNewApi.current = true;
-
-    try {
-      const response = await fetch(process.env.NEXT_PUBLIC_SISTEMPROMPT_API_URL!, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: concern
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('New API response:', data);
-      setApiResponse(data.message);
-    } catch (error) {
-      console.error('Error calling new API:', error);
-      setError('予期せぬエラーが発生しました。リロードをお願いします。');
-      hasCalledNewApi.current = false;
-    }
-  }, [concern]);
-
   useEffect(() => {
     fetchLogoUrl();
-    processBackgroundTasks();
-    callNewApi();
-  }, [fetchLogoUrl, processBackgroundTasks, callNewApi]);
+  }, [fetchLogoUrl]);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -220,25 +79,44 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
 
   const currentQuestion = questions[currentQuestionIndex];
 
-  const handleAnswer = (answer: string | number | string[]) => {
+  const handleAnswer = (answer: string | string[]) => {
     setAnswers(prevAnswers => {
-      const newAnswer: Answer = {
-        question: currentQuestion.text,
-        answer: answer
-      };
-      const existingIndex = prevAnswers.findIndex(a => a.question === currentQuestion.text);
-      if (existingIndex !== -1) {
-        const updatedAnswers = [...prevAnswers];
-        updatedAnswers[existingIndex] = newAnswer;
-        return updatedAnswers;
+      const existingAnswer = prevAnswers.find(a => a.question === currentQuestion.text);
+      if (existingAnswer) {
+        if (currentQuestion.type === 'multi-select-with-other') {
+          const newAnswer = Array.isArray(existingAnswer.answer) ? existingAnswer.answer : [existingAnswer.answer];
+          if (Array.isArray(answer)) {
+            return prevAnswers.map(a => 
+              a.question === currentQuestion.text 
+                ? { ...a, answer: answer }
+                : a
+            );
+          } else {
+            if (newAnswer.includes(answer)) {
+              return prevAnswers.map(a => 
+                a.question === currentQuestion.text 
+                  ? { ...a, answer: newAnswer.filter(item => item !== answer) }
+                  : a
+              );
+            } else {
+              return prevAnswers.map(a => 
+                a.question === currentQuestion.text 
+                  ? { ...a, answer: [...newAnswer, answer] }
+                  : a
+              );
+            }
+          }
+        } else {
+          return prevAnswers.map(a => 
+            a.question === currentQuestion.text 
+              ? { ...a, answer: answer }
+              : a
+          );
+        }
       } else {
-        return [...prevAnswers, newAnswer];
+        return [...prevAnswers, { question: currentQuestion.text, answer: currentQuestion.type === 'multi-select-with-other' ? [answer as string] : answer }];
       }
     });
-
-    if (currentQuestionIndex === 4 && answer === '特になし') {
-      handleNext();
-    }
   };
 
   const handleNext = () => {
@@ -272,13 +150,10 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
       if (!consultationId) {
         throw new Error('Consultation ID not found');
       }
-
-      const spromptValue = typeof apiResponse === 'string' ? apiResponse : JSON.stringify(apiResponse);
       
       const insertData: { [key: string]: string | null } = {
         consultation_id: consultationId,
         concern: concern,
-        sprompt: spromptValue || 'No system prompt available'
       };
 
       const { data: { user } } = await supabase.auth.getUser();
@@ -291,7 +166,7 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
 
       answers.forEach((answer, index) => {
         insertData[`question_${index + 1}`] = answer.question;
-        insertData[`answer_${index + 1}`] = answer.answer.toString();
+        insertData[`answer_${index + 1}`] = Array.isArray(answer.answer) ? answer.answer.join(', ') : answer.answer.toString();
       });
 
       for (let i = answers.length + 1; i <= 15; i++) {
@@ -332,38 +207,8 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (currentQuestion.type === 'select') {
-        const target = (e.target as HTMLSelectElement).value;
-        handleAnswer(target);
-        handleNext();
-      }
-    }
-  };
-
   const renderQuestionInput = () => {
     switch (currentQuestion.type) {
-      case 'number':
-        return (
-          <div className="flex items-center">
-            <input
-              ref={inputRef as React.RefObject<HTMLInputElement>}
-              type="number"
-              value={answers.find(a => a.question === currentQuestion.text)?.answer || ''}
-              onChange={(e) => handleAnswer(Number(e.target.value))}
-              onKeyPress={handleKeyPress}
-              min={currentQuestion.min}
-              max={currentQuestion.max}
-              step={currentQuestion.step}
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2C4179]"
-            />
-            {currentQuestion.unit && (
-              <span className="ml-2 text-gray-600">{currentQuestion.unit}</span>
-            )}
-          </div>
-        );
       case 'select':
         return (
           <div className="grid grid-cols-2 gap-4">
@@ -375,7 +220,7 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
                   handleNext();
                 }}
                 className={`w-full text-center px-4 py-3 rounded-lg transition-colors ${
-                  answers.find(a =>a.question === currentQuestion.text)?.answer === option
+                  answers.find(a => a.question === currentQuestion.text)?.answer === option
                     ? 'bg-[#2C4179] text-white'
                     : 'bg-[#F8FBFF] text-[#293753] hover:bg-[#E6F3FF]'
                 }`}
@@ -385,40 +230,18 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
             ))}
           </div>
         );
-      case 'multiline':
+      case 'multi-select-with-other':
         return (
           <div>
-            <textarea
-              ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-              value={answers.find(a => a.question === currentQuestion.text)?.answer || ''}
-              onChange={(e) => handleAnswer(e.target.value)}
-              onKeyPress={handleKeyPress}
-              rows={4}
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2C4179]"
-            />
-            {currentQuestion.allowNone && (
-              <button
-                onClick={() => handleAnswer('特になし')}
-                className="mt-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
-              >
-                特になし
-              </button>
-            )}
-          </div>
-        );
-      case 'select-with-other':
-        return (
-          <div>
+            <p className="text-sm text-gray-600 mb-2">※複数選択可能です</p>
             <div className="grid grid-cols-2 gap-4 mb-4">
               {currentQuestion.options?.map((option, index) => (
                 <button
                   key={index}
-                  onClick={() => {
-                    handleAnswer(option);
-                    handleNext();
-                  }}
+                  onClick={() => handleAnswer(option)}
                   className={`w-full text-center px-4 py-3 rounded-lg transition-colors ${
-                    answers.find(a => a.question === currentQuestion.text)?.answer === option
+                    Array.isArray(answers.find(a => a.question === currentQuestion.text)?.answer) &&
+                    (answers.find(a => a.question === currentQuestion.text)?.answer as string[]).includes(option)
                       ? 'bg-[#2C4179] text-white'
                       : 'bg-[#F8FBFF] text-[#293753] hover:bg-[#E6F3FF]'
                   }`}
@@ -433,8 +256,19 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
               </label>
               <textarea
                 id={`other-${currentQuestion.id}`}
-                value={typeof answers.find(a => a.question === currentQuestion.text)?.answer === 'string' && !currentQuestion.options?.includes(answers.find(a => a.question === currentQuestion.text)?.answer as string) ? answers.find(a => a.question === currentQuestion.text)?.answer as string : ''}
-                onChange={(e) => handleAnswer(e.target.value)}
+                value={
+                  Array.isArray(answers.find(a => a.question === currentQuestion.text)?.answer)
+                    ? (answers.find(a => a.question === currentQuestion.text)?.answer as string[]).find(item => !currentQuestion.options.includes(item)) || ''
+                    : ''
+                }
+                onChange={(e) => {
+                  const otherAnswer = e.target.value;
+                  if (otherAnswer) {
+                    const currentAnswers = answers.find(a => a.question === currentQuestion.text)?.answer as string[] || [];
+                    const filteredAnswers = currentAnswers.filter(item => currentQuestion.options.includes(item));
+                    handleAnswer([...filteredAnswers, otherAnswer]);
+                  }
+                }}
                 rows={3}
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2C4179]"
                 placeholder="その他の回答を入力してください"
@@ -508,16 +342,6 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
             <h2 className="text-xl font-semibold mb-4">質問 {currentQuestionIndex + 1} / {totalQuestions}</h2>
             <p className="text-lg mb-6">{currentQuestion.text}</p>
             {renderQuestionInput()}
-            {(currentQuestion.type === 'number' || currentQuestion.type === 'multiline') && currentQuestionIndex < questions.length - 1 && (
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={handleNext}
-                  className="px-4 py-2 bg-[#2C4179] text-white rounded-md hover:bg-opacity-90 transition-colors"
-                >
-                  次へ <ChevronRight className="inline-block w-4 h-4 ml-1" />
-                </button>
-              </div>
-            )}
           </div>
         </main>
       </div>
