@@ -26,7 +26,17 @@ interface Answer {
 
 const staticQuestions: Question[] = [
   { id: 1, text: '（対象者）の年代', type: 'select', options: ['乳幼児', '小学生', '10代', '20代', '30代', '40代', '50代', '60代', '70代以上'] },
-  { id: 2, text: '相談の目的を教えてください。', type: 'multi-select-with-other', options: ['症状に関する情報が欲しい', '対策が知りたい', '原因が知りたい'] },
+  { 
+    id: 2, 
+    text: '相談の目的を教えてください。', 
+    type: 'multi-select-with-other', 
+    options: [
+      '症状に関する情報が欲しい', 
+      '対策が知りたい', 
+      '原因が知りたい',
+      '予防策を知りたい'
+    ] 
+  },
   { id: 3, text: '悩み始めたのはいつ頃ですか？', type: 'select', options: ['最近1週間以内', '1ヶ月以内', '3ヶ月以内', '1年以上前'] },
   { id: 4, text: 'あなたの生活習慣で取り組めていないと思うものを選択してください。', type: 'multi-select-with-other', options: ['睡眠', '飲酒', '喫煙', '食生活', '運動', 'ストレス'] },
   { id: 5, text: '今回の相談以外に、健康に関する悩みや不調はありますか。', type: 'multi-select-with-other', options: ['睡眠不足', '頭痛', '過度なストレス', '特定の疾患・疾病', '悩みはない'] },
