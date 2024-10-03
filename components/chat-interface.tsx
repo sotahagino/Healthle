@@ -289,12 +289,14 @@ export default function ChatInterface() {
   const initializeChat = useCallback(async () => {
     if (!concern || !consultationId || initializationRef.current) return
 
+    console.log('Initializing chat...') // Debug log
     initializationRef.current = true
     setIsLoading(true)
     addMessage(decodeURIComponent(concern), 'user')
     const loadingMessageId = addMessage('回答を準備中です...', 'ai')
 
     try {
+      console.log('Fetching consultation data...') // Debug log
       const { data, error } = await supabase
         .from('consultation_data')
         .select('*')
@@ -304,8 +306,35 @@ export default function ChatInterface() {
       if (error) throw error
 
       if (data) {
+        console.log('Consultation data fetched:', data) // Debug log
         setThreadID(data.thread_id || null)
-        await streamResponse(decodeURIComponent(concern), loadingMessageId, data.thread_id)
+
+        // 質問票のデータを取得
+        const questionnaireData = [
+          { question: data.question_1, answer: data.answer_1 },
+          { question: data.question_2, answer: data.answer_2 },
+          { question: data.question_3, answer: data.answer_3 },
+          { question: data.question_4, answer: data.answer_4 },
+          { question: data.question_5, answer: data.answer_5 },
+        ].filter(item => item.question && item.answer) // 空の項目を除外
+
+        // 質問票のデータをプロンプトに含める
+        const questionnairePrompt = questionnaireData.map(item => 
+          `質問: ${item.question}\n回答: ${item.answer}`
+        ).join('\n\n')
+
+        const initialPrompt = `
+          ユーザーの質問票の回答:
+          ${questionnairePrompt}
+
+          ユーザーの相談内容:
+          ${decodeURIComponent(concern)}
+
+          上記の情報を踏まえて、システムプロンプトに則りユーザーの相談に回答してください。
+        `
+
+        console.log('Calling streamResponse...') // Debug log
+        await streamResponse(initialPrompt, loadingMessageId, data.thread_id)
       }
     } catch (error) {
       console.error('Error fetching consultation data:', error)
@@ -320,6 +349,7 @@ export default function ChatInterface() {
     const initialize = async () => {
       await checkLoginStatus();
       if (concern && consultationId && !initializationRef.current) {
+        console.log('Calling initializeChat...') // Debug log
         await initializeChat();
       }
     };
