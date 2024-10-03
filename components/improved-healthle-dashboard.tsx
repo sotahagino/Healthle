@@ -144,15 +144,25 @@ export function ImprovedHealthleDashboardComponent() {
     if (!concern) return
 
     try {
-      const { data, error } = await supabase
+      // 新しい相談を作成
+      const { data: consultationData, error: consultationError } = await supabase
         .from('consultations')
         .insert({ concern })
         .select()
 
-      if (error) throw error
+      if (consultationError) throw consultationError
 
-      if (data && data[0]) {
-        router.push(`/questionnaire?id=${data[0].id}&concern=${encodeURIComponent(concern)}`)
+      if (consultationData && consultationData[0]) {
+        const consultationId = consultationData[0].id
+
+        // consultation_starts テーブルに新しい行を追加
+        const { error: startError } = await supabase
+          .from('consultation_starts')
+          .insert({ consultation_id: consultationId })
+
+        if (startError) throw startError
+
+        router.push(`/questionnaire?id=${consultationId}&concern=${encodeURIComponent(concern)}`)
       } else {
         throw new Error('No data returned from insertion')
       }
