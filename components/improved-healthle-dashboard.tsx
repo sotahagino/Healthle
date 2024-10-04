@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { Search, X, ChevronDown, Menu, History } from 'lucide-react'
+import { Search, X, ChevronDown, Menu, History, FileText } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
@@ -30,6 +30,9 @@ export function ImprovedHealthleDashboardComponent() {
   const [selectedConcern, setSelectedConcern] = useState<string | null>(null)
   const [isTyping, setIsTyping] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showModal, setShowModal] = useState(false)
+  const [modalContent, setModalContent] = useState('')
+  const [modalTitle, setModalTitle] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -76,7 +79,7 @@ export function ImprovedHealthleDashboardComponent() {
 
       setGenres(data || [])
     } catch (error) {
-      console.error('Error fetching genres:', error)
+      console.error('ジャンルの取得に失敗しました:', error)
       setError('ジャンルの取得に失敗しました。')
     }
   }
@@ -91,7 +94,7 @@ export function ImprovedHealthleDashboardComponent() {
 
       setAllConcerns((data || []).map((item: Concern) => item.description))
     } catch (error) {
-      console.error('Error fetching all concerns:', error)
+      console.error('全ての悩みの取得に失敗しました:', error)
       setError('全ての悩みの取得に失敗しました。')
     }
   }
@@ -108,9 +111,27 @@ export function ImprovedHealthleDashboardComponent() {
 
       setFrequentConcerns((data || []).map((item: Concern) => item.description))
     } catch (error) {
-      console.error('Error fetching frequent concerns:', error)
+      console.error('よく相談される内容の取得に失敗しました:', error)
       setError('よく相談される内容の取得に失敗しました。')
     }
+  }
+
+  const fetchLegalDocument = async (type: string) => {
+    const { data, error } = await supabase
+      .from('legal_documents')
+      .select('content')
+      .eq('type', type)
+      .single()
+
+    if (error) {
+      console.error('法的文書の取得に失敗しました:', error)
+      setError('法的文書の取得に失敗しました。')
+      return
+    }
+
+    setModalContent(data.content)
+    setModalTitle(type === 'terms_of_service' ? '利用規約' : 'プライバシーポリシー')
+    setShowModal(true)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,10 +184,10 @@ export function ImprovedHealthleDashboardComponent() {
 
         router.push(`/questionnaire?id=${consultationId}&concern=${encodeURIComponent(concern)}`)
       } else {
-        throw new Error('No data returned from insertion')
+        throw new Error('挿入からデータが返されませんでした')
       }
     } catch (error) {
-      console.error('Error starting consultation:', error)
+      console.error('相談の開始に失敗しました:', error)
       setError('相談の開始に失敗しました。もう一度お試しください。')
     }
   }
@@ -306,6 +327,22 @@ export function ImprovedHealthleDashboardComponent() {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-md">
+        <p className="text-center text-sm text-gray-600 mb-2">
+          <button
+            onClick={() => fetchLegalDocument('terms_of_service')}
+            className="text-[#2C4179] hover:underline"
+          >
+            利用規約
+          </button>
+          と
+          <button
+            onClick={() => fetchLegalDocument('privacy_policy')}
+            className="text-[#2C4179] hover:underline"
+          >
+            プライバシーポリシー
+          </button>
+          に同意の上で利用ください
+        </p>
         <form onSubmit={handleStartConsultation} className="w-full">
           <button
             type="submit"
@@ -320,6 +357,22 @@ export function ImprovedHealthleDashboardComponent() {
           </button>
         </form>
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">{modalTitle}</h2>
+              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="prose max-w-none">
+              <pre className="whitespace-pre-wrap text-sm">{modalContent}</pre>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
