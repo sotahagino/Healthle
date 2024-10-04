@@ -9,6 +9,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { useSearchParams } from 'next/navigation'
 import rehypeRaw from 'rehype-raw'
 import remarkGfm from 'remark-gfm'
+import HealthDisclaimerModal from './HealthDisclaimerModal'
 
 interface CardProps {
   children: ReactNode;
@@ -144,6 +145,15 @@ export default function ChatInterface() {
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const [threadID, setThreadID] = useState<string | null>(null)
   const initializationRef = useRef(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputMessage(e.target.value)
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+    }
+  }
 
   const checkLoginStatus = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -620,7 +630,7 @@ export default function ChatInterface() {
             {renderedMessages}
           </div>
         </div>
-        <div className="bg-white border-t border-gray-200 p-4">
+        <div className={`bg-white border-t border-gray-200 p-4 ${isDropdownOpen ? 'mb-4' : ''}`}>
           <div className="max-w-3xl mx-auto">
             <div className="relative mb-3" ref={dropdownRef}>
               <button
@@ -653,19 +663,21 @@ export default function ChatInterface() {
                 </div>
               )}
             </div>
-            <form onSubmit={handleSendMessage} className="flex items-center">
+            <form onSubmit={handleSendMessage} className="flex items-end">
               <div className="relative flex-1">
-                <input
-                  type="text"
+                <textarea
+                  ref={textareaRef}
                   value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
+                  onChange={handleTextareaChange}
                   placeholder="気になることはありますか？"
-                  className="w-full p-4 pr-12 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#002341]"
+                  className="w-full p-4 pr-12 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#002341] resize-none overflow-hidden"
                   disabled={isLoading}
+                  rows={1}
+                  style={{ minHeight: '2.5rem', paddingRight: '3rem' }}
                 />
                 <button
                   type="submit"
-                  className={`absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#002341] text-white p-2 rounded-full hover:bg-opacity-90 transition-colors flex items-center justify-center ${
+                  className={`absolute right-2 top-2 bg-[#002341] text-white p-2 rounded-full hover:bg-opacity-90 transition-colors flex items-center justify-center ${
                     isLoading ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                   aria-label="送信"
@@ -774,6 +786,7 @@ export default function ChatInterface() {
           </div>
         </div>
       )}
+      <HealthDisclaimerModal />
     </>
   )
 }
