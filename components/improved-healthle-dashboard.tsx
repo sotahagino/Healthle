@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { Search, X, ChevronDown, Menu, History, FileText } from 'lucide-react'
+import { Search, X, ChevronDown, Menu, History } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
