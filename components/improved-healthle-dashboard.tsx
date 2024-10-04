@@ -14,6 +14,7 @@ const supabase: SupabaseClient = createClient(
 interface Genre {
   id: number
   name: string
+  display_order: number
 }
 
 interface Concern {
@@ -42,9 +43,9 @@ export function ImprovedHealthleDashboardComponent() {
 
   useEffect(() => {
     if (genres.length > 0 && !selectedGenre) {
-      const sleepGenre = genres.find(genre => genre.name === '睡眠')
-      if (sleepGenre) {
-        setSelectedGenre(sleepGenre.id)
+      const defaultGenre = genres.find(genre => genre.display_order === 1)
+      if (defaultGenre) {
+        setSelectedGenre(defaultGenre.id)
       } else {
         setSelectedGenre(genres[0].id)
       }
@@ -72,7 +73,7 @@ export function ImprovedHealthleDashboardComponent() {
     try {
       const { data, error } = await supabase
         .from('health_categories')
-        .select('id, name')
+        .select('id, name, display_order')
         .order('display_order', { ascending: true })
 
       if (error) throw error
