@@ -70,6 +70,7 @@ export function ImprovedHealthleDashboardComponent() {
       const { data, error } = await supabase
         .from('health_categories')
         .select('id, name')
+        .order('display_order', { ascending: true })
 
       if (error) throw error
 
@@ -144,7 +145,6 @@ export function ImprovedHealthleDashboardComponent() {
     if (!concern) return
 
     try {
-      // 新しい相談を作成
       const { data: consultationData, error: consultationError } = await supabase
         .from('consultations')
         .insert({ concern })
@@ -155,7 +155,6 @@ export function ImprovedHealthleDashboardComponent() {
       if (consultationData && consultationData[0]) {
         const consultationId = consultationData[0].id
 
-        // consultation_starts テーブルに新しい行を追加
         const { error: startError } = await supabase
           .from('consultation_starts')
           .insert({ consultation_id: consultationId })
