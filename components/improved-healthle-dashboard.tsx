@@ -187,10 +187,9 @@ export function ImprovedHealthleDashboardComponent() {
 
         if (startError) throw startError
 
-        // アニメーション完了後にルーティングを行う
         setTimeout(() => {
           router.push(`/questionnaire?id=${consultationId}&concern=${encodeURIComponent(concern)}`)
-        }, 500) // アニメーションの長さに合わせて調整
+        }, 500)
       } else {
         throw new Error('挿入からデータが返されませんでした')
       }
@@ -233,12 +232,12 @@ export function ImprovedHealthleDashboardComponent() {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="min-h-screen bg-white text-gray-800 font-sans"
+          className="min-h-screen bg-white text-gray-800 font-sans flex flex-col"
         >
           <div className="bg-[#2C4179] text-white text-center py-2 px-4 text-sm font-semibold">
             24時間対応 | 即時回答 | 完全無料
           </div>
-          <div className="container mx-auto px-4 py-6 pb-24">
+          <div className="container mx-auto px-4 py-6 flex-grow overflow-hidden flex flex-col">
             <header className="flex justify-between items-center mb-6">
               <div className="flex items-center">
                 <Image 
@@ -267,8 +266,7 @@ export function ImprovedHealthleDashboardComponent() {
               </div>
             </header>
 
-            <main>
-            <h2 className="text-xl font-semibold mb-2 text-gray-700">あなたのお悩みを教えて下さい。</h2>
+            <main className="flex-grow overflow-hidden flex flex-col pb-28"> {/* Reduced padding-bottom */}
               <div className="relative mb-4">
                 <input
                   type="text"
@@ -293,7 +291,7 @@ export function ImprovedHealthleDashboardComponent() {
               </div>
 
               {isTyping && suggestions.length > 0 && (
-                <div className="mt-2 bg-white border border-gray-200 rounded-md shadow-lg">
+                <div className="mt-2 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
                   <h3 className="px-4 py-2 text-sm font-semibold text-gray-600 border-b border-gray-200">
                     &quot;{searchTerm}&quot;に関連する良く相談される内容
                   </h3>
@@ -311,7 +309,7 @@ export function ImprovedHealthleDashboardComponent() {
                 </div>
               )}
 
-              <div className="mt-6">
+              <div className="mt-6 flex-grow overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-gray-600">よく相談される内容</h3>
                   <div className="relative">
@@ -329,23 +327,25 @@ export function ImprovedHealthleDashboardComponent() {
                     <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
                   </div>
                 </div>
-                <div className="flex flex-col space-y-2">
-                  {frequentConcerns.map((concern, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleFrequentConcernClick(concern)}
-                      className="text-left px-4 py-3 bg-gray-50 text-gray-800 hover:bg-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#2C4179] transition-colors"
-                    >
-                      {concern}
-                    </button>
-                  ))}
+                <div className="flex-grow overflow-y-auto">
+                  <div className="flex flex-col space-y-2">
+                    {frequentConcerns.map((concern, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleFrequentConcernClick(concern)}
+                        className="text-left px-4 py-3 bg-gray-50 text-gray-800 hover:bg-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#2C4179] transition-colors"
+                      >
+                        {concern}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </main>
           </div>
 
-          <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-md">
-            <p className="text-center text-sm text-gray-600 mb-2">
+          <div className="fixed bottom-0 left-0 right-0 bg-white p-3 shadow-md z-10"> {/* Reduced padding */}
+            <p className="text-center text-2xs text-gray-600 mb-2">
               <button
                 onClick={() => fetchLegalDocument('terms_of_service')}
                 className="text-[#2C4179] hover:underline"
@@ -364,7 +364,7 @@ export function ImprovedHealthleDashboardComponent() {
             <form onSubmit={handleStartConsultation} className="w-full">
               <button
                 type="submit"
-                className={`w-full rounded-lg py-4 font-semibold text-lg transition-colors ${
+                className={`w-full rounded-lg py-3 font-semibold text-base transition-colors ${  // Reduced padding and font size
                   selectedConcern || searchTerm
                     ? 'bg-[#2C4179] text-white hover:bg-opacity-90'
                     : 'bg-gray-200 text-gray-500 cursor-not-allowed'
