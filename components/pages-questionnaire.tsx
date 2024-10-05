@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion'; // framer-motionをインポート
 
 const supabase: SupabaseClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -55,6 +56,7 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [questions] = useState<Question[]>(staticQuestions);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const searchParams = useSearchParams();
 
@@ -155,6 +157,7 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
 
     setError(null);
     setIsSubmitting(true);
+    setIsTransitioning(true); // トランジション状態を設定
 
     try {
       const consultationId = searchParams.get('id');
@@ -162,6 +165,7 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
         throw new Error('Consultation ID not found');
       }
       
+      // データの挿入をバックグラウンドで行う
       const insertData: { [key: string]: string | null } = {
         consultation_id: consultationId,
         concern: concern,
@@ -187,34 +191,27 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
 
       console.log('Preparing to insert data:', insertData);
 
-      const { data, error } = await supabase
+      supabase
         .from('consultation_data')
         .insert([insertData])
-        .select();
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('Supabase error:', error);
+          } else {
+            console.log('Data inserted successfully:', data);
+          }
+        });
 
-      console.log('Supabase insert response:', { data, error });
+      // アニメーション完了後にチャット画面へ遷移
+      setTimeout(() => {
+        router.push(`/chat?id=${consultationId}&concern=${encodeURIComponent(concern)}`);
+      }, 500); // アニメーションの長さに合わせて調整
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw new Error(`データの保存に失敗しました: ${error.message}`);
-      }
-
-      if (!data || data.length === 0) {
-        console.error('No data returned from insert operation');
-        throw new Error('データが正常に挿入されませんでした。');
-      }
-
-      console.log('Data inserted successfully:', data);
-      router.push(`/chat?id=${consultationId}&concern=${encodeURIComponent(concern)}`);
     } catch (error) {
-      console.error('Error in handleSubmit:', error);
-      if (error instanceof Error) {
-        setError(`データの保存に失敗しました: ${error.message}`);
-      } else {
-        setError('データの保存中に予期せぬエラーが発生しました。');
-      }
-    } finally {
+      console.error('相談の開始に失敗しました:', error);
+      setError('相談の開始に失敗しました。もう一度お試しください。');
       setIsSubmitting(false);
+      setIsTransitioning(false);
     }
   };
 
@@ -307,7 +304,12 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#E6F3FF] to-[#F8FBFF] text-[#293753] font-sans">
+    <motion.div
+      initial={{ opacity: 1 }}
+      animate={{ opacity: isTransitioning ? 0 : 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-gradient-to-b from-[#E6F3FF] to-[#F8FBFF] text-[#293753] font-sans"
+    >
       <div className="container mx-auto px-4 py-6 pb-24">
         <div className="flex justify-between items-start mb-6">
           <button
@@ -375,8 +377,10 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
         {currentQuestionIndex === questions.length - 1 && (
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting}
-            className={`w-full bg-[#2C4179] text-white rounded-lg py-3 mt-4 font-semibold text-lg hover:bg-opacity-90 transition-colors shadow-md flex items-center justify-center ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isSubmitting || isTransitioning}
+            className={`w-full bg-[#2C4179] text-white rounded-lg py-3 mt-4 font-semibold text-lg hover:bg-opacity-90 transition-colors shadow-md flex items-center justify-center ${
+              isSubmitting || isTransitioning ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             {isSubmitting ? (
               <>
@@ -389,6 +393,6 @@ export default function QuestionnaireComponentBase({ concern }: QuestionnaireCom
           </button>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
