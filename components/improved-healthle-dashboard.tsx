@@ -220,6 +220,9 @@ export function ImprovedHealthleDashboardComponent() {
 
   return (
     <div className="min-h-screen bg-white text-gray-800 font-sans">
+      <div className="bg-[#2C4179] text-white text-center py-2 px-4 text-sm font-semibold">
+        24時間対応 | 即時回答 | 完全無料
+      </div>
       <div className="container mx-auto px-4 py-6 pb-24">
         <header className="flex justify-between items-center mb-6">
           <div className="flex items-center">
@@ -250,8 +253,7 @@ export function ImprovedHealthleDashboardComponent() {
         </header>
 
         <main>
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">あなたのお悩みを教えて下さい。</h2>
-          
+        <h2 className="text-xl font-semibold mb-2 text-gray-700">あなたのお悩みを教えて下さい。</h2>
           <div className="relative mb-4">
             <input
               type="text"
@@ -349,12 +351,12 @@ export function ImprovedHealthleDashboardComponent() {
             type="submit"
             className={`w-full rounded-lg py-4 font-semibold text-lg transition-colors ${
               selectedConcern || searchTerm
-                ? 'bg-[#293753] text-white hover:bg-opacity-90'
+                ? 'bg-[#2C4179] text-white hover:bg-opacity-90'
                 : 'bg-gray-200 text-gray-500 cursor-not-allowed'
             }`}
             disabled={!selectedConcern && !searchTerm}
           >
-            相談を始める
+            無料で今すぐ相談を始める
           </button>
         </form>
       </div>
