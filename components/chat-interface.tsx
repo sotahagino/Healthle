@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef, useMemo, ReactNode } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Send, HelpCircle, User, Home, ChevronDown, ChevronUp, X } from 'lucide-react'
 import Image from 'next/image'
@@ -10,23 +10,6 @@ import { useSearchParams } from 'next/navigation'
 import rehypeRaw from 'rehype-raw'
 import remarkGfm from 'remark-gfm'
 import HealthDisclaimerModal from './HealthDisclaimerModal'
-
-interface CardProps {
-  children: ReactNode;
-  className?: string;
-}
-
-const Card = ({ children, className = '' }: CardProps) => (
-  <div className={`bg-white shadow-md rounded-lg overflow-hidden ${className}`}>
-    {children}
-  </div>
-)
-
-const CardContent = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
-  <div className={`p-4 ${className}`}>
-    {children}
-  </div>
-)
 
 const supabase: SupabaseClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,81 +31,90 @@ interface SuggestionContent {
   q5: string
 }
 
-const MessageComponent = React.memo(
-  ({ message }: { message: Message }) => (
-    <Card className="my-4">
-      <CardContent>
-        <div className="flex items-center mb-2">
-          {message.sender === 'user' ? (
-            message.isQuestion ? (
-              <HelpCircle className="w-6 h-6 mr-2 text-[#002341]" />
-            ) : (
-              <User className="w-6 h-6 mr-2 text-[#002341]" />
-            )
+// MessageComponentを別の関数として定義
+function MessageComponentBase({ message }: { message: Message }) {
+  return (
+    <div className="my-4 p-4 bg-white rounded-lg shadow">
+      <div className="flex items-center mb-2">
+        {message.sender === 'user' ? (
+          message.isQuestion ? (
+            <HelpCircle className="w-6 h-6 mr-2 text-[#002341]" />
           ) : (
-            <Image
-              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/doctor100.png`}
-              alt="Doctor Icon"
-              width={24}
-              height={24}
-              className="mr-2"
-            />
-          )}
-          <p className="text-lg font-semibold text-[#002341]">
-            {message.sender === 'user'
-              ? message.isQuestion
-                ? '質問'
-                : 'お悩み'
-              : '回答'}
-          </p>
-        </div>
-        <ReactMarkdown
-          className="prose max-w-none markdown-content"
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeRaw]}
-          components={{
-            h1: ({ ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
-            h2: ({ ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
-            h3: ({ ...props }) => <h3 className="text-lg font-medium mt-4 mb-2" {...props} />,
-            h4: ({ ...props }) => <h4 className="text-base font-medium mt-3 mb-2" {...props} />,
-            h5: ({ ...props }) => <h5 className="text-sm font-medium mt-2 mb-1" {...props} />,
-            h6: ({ ...props }) => <h6 className="text-xs font-medium mt-2 mb-1" {...props} />,
-            p: ({ ...props }) => <p className="my-2 leading-relaxed" {...props} />,
-            ul: ({ ...props }) => <ul className="list-disc pl-6 my-2 space-y-1" {...props} />,
-            ol: ({ ...props }) => <ol className="list-decimal pl-6 my-2 space-y-1" {...props} />,
-            li: ({ ...props }) => <li className="my-1" {...props} />,
-            a: ({ ...props }) => (
-              <a className="text-[#002341] hover:underline" target="_blank" rel="noopener noreferrer" {...props} />
-            ),
-            blockquote: ({ ...props }) => (
-              <blockquote className="border-l-4 border-gray-300 pl-4 italic my-2" {...props} />
-            ),
-            code: ({ className, children, ...props }) => {
-              const match = /language-(\w+)/.exec(className || '')
-              return match ? (
-                <pre className="bg-gray-100 rounded-md p-4 overflow-x-auto my-2">
-                  <code className={className} {...props}>
-                    {children}
-                  </code>
-                </pre>
-              ) : (
-                <code className="bg-gray-100 rounded px-1 py-0.5" {...props}>
+            <User className="w-6 h-6 mr-2 text-[#002341]" />
+          )
+        ) : (
+          <Image
+            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/doctor100.png`}
+            alt="医師のアイコン"
+            width={24}
+            height={24}
+            className="mr-2"
+          />
+        )}
+        <p className="text-lg font-semibold text-[#002341]">
+          {message.sender === 'user'
+            ? message.isQuestion
+              ? '質問'
+              : 'お悩み'
+            : '回答'}
+        </p>
+      </div>
+      <ReactMarkdown
+        className="prose max-w-none markdown-content"
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
+        components={{
+          h1: ({ ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
+          h2: ({ ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
+          h3: ({ ...props }) => <h3 className="text-lg font-medium mt-4 mb-2" {...props} />,
+          h4: ({ ...props }) => <h4 className="text-base font-medium mt-3 mb-2" {...props} />,
+          h5: ({ ...props }) => <h5 className="text-sm font-medium mt-2 mb-1" {...props} />,
+          h6: ({ ...props }) => <h6 className="text-xs font-medium mt-2 mb-1" {...props} />,
+          p: ({ ...props }) => <p className="my-2 leading-relaxed" {...props} />,
+          ul: ({ ...props }) => <ul className="list-disc pl-6 my-2 space-y-1" {...props} />,
+          ol: ({ ...props }) => <ol className="list-decimal pl-6 my-2 space-y-1" {...props} />,
+          li: ({ ...props }) => <li className="my-1" {...props} />,
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#002341] hover:underline"
+            >
+              {children}
+            </a>
+          ),
+          blockquote: ({ ...props }) => (
+            <blockquote className="border-l-4 border-gray-300 pl-4 italic my-2" {...props} />
+          ),
+          code: ({ className, children, ...props }) => {
+            const match = /language-(\w+)/.exec(className || '')
+            return match ? (
+              <pre className="bg-gray-100 rounded-md p-4 overflow-x-auto my-2">
+                <code className={className} {...props}>
                   {children}
                 </code>
-              )
-            },
-            hr: ({ ...props }) => <hr className="my-4 border-t border-gray-300" {...props} />,
-            em: ({ ...props }) => <em className="italic text-gray-700" {...props} />,
-            strong: ({ ...props }) => <strong className="font-bold text-gray-900" {...props} />,
-          }}
-        >
-          {message.text}
-        </ReactMarkdown>
-      </CardContent>
-    </Card>
-  ),
-  (prevProps, nextProps) => prevProps.message.text === nextProps.message.text
-)
+              </pre>
+            ) : (
+              <code className="bg-gray-100 rounded px-1 py-0.5" {...props}>
+                {children}
+              </code>
+            )
+          },
+          hr: ({ ...props }) => <hr className="my-4 border-t border-gray-300" {...props} />,
+          em: ({ ...props }) => <em className="italic text-gray-700" {...props} />,
+          strong: ({ ...props }) => <strong className="font-bold text-gray-900" {...props} />,
+        }}
+      >
+        {message.text}
+      </ReactMarkdown>
+    </div>
+  )
+}
+
+// React.memoでラップし、display nameを設定
+const MessageComponent = React.memo(MessageComponentBase)
+MessageComponent.displayName = 'MessageComponent'
 
 export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])
@@ -139,7 +131,6 @@ export default function ChatInterface() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const searchParams = useSearchParams()
   const consultationId = searchParams.get('id')
-  const concern = searchParams.get('concern')
   const messageIdRef = useRef(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
@@ -162,7 +153,7 @@ export default function ChatInterface() {
 
   const saveMessageToDatabase = useCallback(async (message: Message) => {
     if (!consultationId) {
-      console.error('No consultation ID available')
+      console.error('相談IDが利用できません')
       return
     }
   
@@ -181,13 +172,13 @@ export default function ChatInterface() {
         })
   
       if (error) {
-        console.error('Error saving message to database:', error)
+        console.error('メッセージのデータベース保存中にエラーが発生しました:', error)
         throw error
       }
   
-      console.log('Message saved successfully:', data)
+      console.log('メッセージが正常に保存されました:', data)
     } catch (error) {
-      console.error('Error in saveMessageToDatabase:', error)
+      console.error('saveMessageToDatabaseでエラーが発生しました:', error)
     }
   }, [consultationId])
 
@@ -203,7 +194,7 @@ export default function ChatInterface() {
     
     if (sender === 'user') {
       saveMessageToDatabase(newMessage)
-        .catch(error => console.error('Error saving message after adding:', error))
+        .catch(error => console.error('メッセージ追加後の保存中にエラーが発生しました:', error))
     }
   
     return newMessage.id
@@ -219,13 +210,14 @@ export default function ChatInterface() {
 
   const streamResponse = useCallback(async (message: string, messageId: string, threadId: string | null) => {
     try {
+      console.log('APIにリクエストを送信中:', process.env.NEXT_PUBLIC_WEBASSISTANT_URL)
       const response = await fetch(process.env.NEXT_PUBLIC_WEBASSISTANT_URL!, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: message || "",
+          message: message,
           threadId: threadId || "",
         }),
       })
@@ -245,13 +237,13 @@ export default function ChatInterface() {
             .eq('consultation_id', consultationId)
           
           if (error) {
-            console.error('Error saving thread_id to database:', error)
+            console.error('thread_idのデータベース保存中にエラーが発生しました:', error)
           }
         }
       }
   
       if (!response.body) {
-        throw new Error('Response body is null')
+        throw new Error('レスポンスボディがnullです')
       }
   
       const reader = response.body.getReader()
@@ -273,7 +265,7 @@ export default function ChatInterface() {
                 updateMessage(messageId, accumulatedResponse)
               }
             } catch (error) {
-              console.error('Error parsing JSON:', error)
+              console.error('JSONの解析エラー:', error)
             }
           }
         }
@@ -288,25 +280,23 @@ export default function ChatInterface() {
         })
         await fetchChatSenntakusi(accumulatedResponse)
       } else {
-        throw new Error('No response received from the API')
+        throw new Error('APIからレスポンスを受信できませんでした')
       }
     } catch (error) {
-      console.error('Error in streamResponse:', error)
+      console.error('streamResponseでエラーが発生しました:', error)
       updateMessage(messageId, 'データの読み込みに失敗しました。リロードをお願いします。')
     }
   }, [consultationId, saveMessageToDatabase, updateMessage])
 
   const initializeChat = useCallback(async () => {
-    if (!concern || !consultationId || initializationRef.current) return
+    if (!consultationId || initializationRef.current) return
 
-    console.log('Initializing chat...') // Debug log
+    console.log('チャットを初期化中...')
     initializationRef.current = true
     setIsLoading(true)
-    addMessage(decodeURIComponent(concern), 'user')
-    const loadingMessageId = addMessage('回答を準備中です...', 'ai')
 
     try {
-      console.log('Fetching consultation data...') // Debug log
+      console.log('相談データを取得中...')
       const { data, error } = await supabase
         .from('consultation_data')
         .select('*')
@@ -316,7 +306,7 @@ export default function ChatInterface() {
       if (error) throw error
 
       if (data) {
-        console.log('Consultation data fetched:', data) // Debug log
+        console.log('相談データを取得しました:', data)
         setThreadID(data.thread_id || null)
 
         // 質問票のデータを取得
@@ -333,39 +323,42 @@ export default function ChatInterface() {
           `質問: ${item.question}\n回答: ${item.answer}`
         ).join('\n\n')
 
+        addMessage(data.concern, 'user')
+        const loadingMessageId = addMessage('回答を準備中です...', 'ai')
+
         const initialPrompt = `
           ユーザーの質問票の回答:
           ${questionnairePrompt}
 
           ユーザーの相談内容:
-          ${decodeURIComponent(concern)}
+          ${data.concern}
 
           上記の情報を踏まえて、システムプロンプトに則りユーザーの相談に回答してください。
         `
 
-        console.log('Calling streamResponse...') // Debug log
+        console.log('streamResponseを呼び出し中...')
         await streamResponse(initialPrompt, loadingMessageId, data.thread_id)
       }
     } catch (error) {
-      console.error('Error fetching consultation data:', error)
-      updateMessage(loadingMessageId, 'データの取得に失敗しました。リロードをお願いします。')
+      console.error('チャットの初期化中にエラーが発生しました:', error)
+      updateMessage('loading-message-id', 'データの取得に失敗しました。リロードをお願いします。')
     } finally {
       setIsLoading(false)
       setShowSurveyModal(true)
     }
-  }, [concern, consultationId, addMessage, updateMessage, streamResponse])
+  }, [consultationId, addMessage, updateMessage, streamResponse])
 
-  useEffect(() => {
+  useEffect(()=> {
     const initialize = async () => {
       await checkLoginStatus();
-      if (concern && consultationId && !initializationRef.current) {
-        console.log('Calling initializeChat...') // Debug log
+      if (consultationId && !initializationRef.current) {
+        console.log('initializeChatを呼び出し中...')
         await initializeChat();
       }
     };
   
     initialize();
-  }, [checkLoginStatus, initializeChat, concern, consultationId]);
+  }, [checkLoginStatus, initializeChat, consultationId]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -398,10 +391,10 @@ export default function ChatInterface() {
       if (data.status === 'OK' && data.result && data.result.content) {
         setSuggestionContent(data.result.content)
       } else {
-        console.error('Unexpected response format:', data)
+        console.error('予期しないレスポンス形式:', data)
       }
     } catch (error) {
-      console.error('Error fetching chat suggestions:', error)
+      console.error('チャット提案の取得中にエラーが発生しました:', error)
     }
   }
 
@@ -418,7 +411,7 @@ export default function ChatInterface() {
     try {
       await streamResponse(inputMessage, aiMessageId, threadID)
     } catch (error) {
-      console.error('Error sending message:', error)
+      console.error('メッセージ送信中にエラーが発生しました:', error)
       updateMessage(aiMessageId, 'エラーが発生しました。リロードをお願いします。')
     } finally {
       setIsLoading(false)
@@ -428,9 +421,8 @@ export default function ChatInterface() {
   const handleSuggestionClick = (suggestion: string) => {
     setInputMessage(suggestion)
     setIsDropdownOpen(false)
-    const inputElement = document.querySelector('input[type="text"]')
-    if (inputElement) {
-      inputElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (textareaRef.current) {
+      textareaRef.current.focus()
     }
   }
 
@@ -455,7 +447,7 @@ export default function ChatInterface() {
         setShowRegistrationModal(true)
       }
     } catch (error) {
-      console.error('Error saving survey result:', error)
+      console.error('アンケート結果の保存中にエラーが発生しました:', error)
     }
   }
 
@@ -493,7 +485,7 @@ export default function ChatInterface() {
 
         if (consultationError) throw consultationError
 
-        console.log('User registered and data updated successfully:', authData.user)
+        console.log('ユーザー登録とデータ更新が正常に完了しました:', authData.user)
         setShowRegistrationModal(false)
         setIsLoggedIn(true)
         await supabase.auth.signInWithPassword({
@@ -502,7 +494,7 @@ export default function ChatInterface() {
         })
       }
     } catch (error) {
-      console.error('Error during registration or data update:', error)
+      console.error('登録またはデータ更新中にエラーが発生しました:', error)
       setRegistrationError('登録中にエラーが発生しました。もう一度お試しください。')
     }
   }
@@ -607,7 +599,7 @@ export default function ChatInterface() {
           <div className="flex items-center">
             <Image
               src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/aicon100.png`}
-              alt="Healthle Logo"
+              alt="Healthleロゴ"
               width={40}
               height={40}
               className="mr-3"
