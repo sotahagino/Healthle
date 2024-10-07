@@ -243,15 +243,19 @@ export function ImprovedHealthleDashboardComponent() {
         console.error('ユーザー情報の取得に失敗しました:', userError)
       }
 
-      const uid = user ? user.id : null
+      const insertData: { consultation_id: string; concern: string; uid?: string } = {
+        consultation_id: consultationId,
+        concern: consultationText,
+      }
+
+      // ユーザーがログインしている場合のみuidを追加
+      if (user) {
+        insertData.uid = user.id
+      }
 
       const { data: consultationData, error: consultationError } = await supabase
         .from('consultation_data')
-        .insert({ 
-          consultation_id: consultationId,
-          concern: consultationText,
-          uid: uid
-        })
+        .insert(insertData)
         .select()
 
       if (consultationError) {
