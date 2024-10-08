@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { v4 as uuidv4 } from 'uuid'
+import Head from 'next/head'
 
 const supabase: SupabaseClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,7 +33,7 @@ interface ElementCheckResult {
 }
 
 export function ImprovedHealthleDashboardComponent() {
-  const defaultText = `お困りの症状や悩みを具体的にご記入ください。以下の要素を含めると、より適切なアドバイスが得られます。
+  const defaultText = `こちらにお困りの症状や悩みを具体的にご記入ください。以下の要素を含めると、より適切なアドバイスが得られます。
 
 ・症状の開始時期
 ・症状の頻度
@@ -176,6 +177,20 @@ export function ImprovedHealthleDashboardComponent() {
       setElementCheckResult(null)
     }
   }, [consultationText, debounceFetchSuggestions, isDefaultText])
+
+  useEffect(() => {
+    // Prevent zoom on input focus for iOS devices
+    const preventDefault = (e: Event) => e.preventDefault()
+    document.addEventListener('gesturestart', preventDefault)
+    document.addEventListener('gesturechange', preventDefault)
+    document.addEventListener('gestureend', preventDefault)
+
+    return () => {
+      document.removeEventListener('gesturestart', preventDefault)
+      document.removeEventListener('gesturechange', preventDefault)
+      document.removeEventListener('gestureend', preventDefault)
+    }
+  }, [])
 
   const fetchConsultationExamples = async () => {
     try {
@@ -377,175 +392,182 @@ export function ImprovedHealthleDashboardComponent() {
   }
 
   return (
-    <AnimatePresence>
-      {!isTransitioning && (
-        <motion.div
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          className="min-h-screen bg-white text-gray-800 font-sans flex flex-col"
-        >
-          <div className="bg-[#2C4179] text-white text-center py-3 px-4 text-sm font-semibold">
-            24時間対応 | 即時回答 | 完全無料
-          </div>
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow overflow-y-auto flex flex-col w-full">
-            <header className="flex  justify-between items-center mb-6">
-              <div className="flex items-center">
-                <Image 
-                  src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/aicon100.png`} 
-                  alt="Healthle Logo" 
-                  width={32} 
-                  height={32} 
-                />
-                <h1 className="text-xl font-bold text-[#2C4179] ml-2">Healthle <span className="text-xs font-normal text-gray-500">ヘルスル</span></h1>
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2"
-                  aria-label="過去の相談"
-                  onClick={handleViewPastConsultations}
-                >
-                  <History className="w-5 h-5 text-[#2C4179]" />
-                </button>
-                <button
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2"
-                  aria-label="設定"
-                  onClick={handleMenuClick}
-                >
-                  <Menu className="w-5 h-5 text-[#2C4179]" />
-                </button>
-              </div>
-            </header>
-
-            <main className="flex-grow overflow-y-auto flex flex-col pb-24">
-              <h2 className="text-lg font-semibold mb-3 text-[#2C4179]">相談内容</h2>
-              <MissingElementsAlert />
-              <div className="rounded-lg overflow-hidden mb-4">
-                <div className="border-2 border-gray-200 rounded-lg p-3 bg-white relative">
-                  <textarea
-                    ref={textareaRef}
-                    value={consultationText}
-                    onChange={handleInputChange}
-                    onFocus={() => {
-                      if (isDefaultText) {
-                        setConsultationText('')
-                        setIsDefaultText(false)
-                      }
-                    }}
-                    onBlur={() => {
-                      if (consultationText === '') {
-                        setConsultationText(defaultText)
-                        setIsDefaultText(true)
-                      }
-                    }}
-                    className="w-full min-h-[8rem] resize-none bg-transparent outline-none text-sm overflow-y-auto"
-                    style={{
-                      caretColor: 'black',
-                    }}
-                    aria-label="相談内容を入力"
-                  />
-                  {suggestion && (
-                    <div className="mt-2 bg-blue-50 border-t border-blue-200 p-2">
-                      <div className="flex items-start mb-2">
-                        <LightbulbIcon className="w-4 h-4 text-blue-500 mr-2 mt-1 flex-shrink-0" />
-                        <p className="text-xs text-blue-600 flex-grow">{suggestion}</p>
-                      </div>
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={handleSuggestionAccept}
-                          className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        >
-                          追加
-                        </button>
-                        <button
-                          onClick={handleSuggestionClose}
-                          className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
-                        >
-                          閉じる
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {isDefaultText && consultationExamples.length > 0 && (
-                <div className="mb-4 bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                  <h3 className="text-sm font-semibold text-gray-600 p-2 border-b">相談例：</h3>
-                  <div className="p-3">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={currentExampleIndex}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.5 }}
-                        className="text-sm text-gray-600"
-                      >
-                        <button
-                          onClick={() => handleExampleClick(consultationExamples[currentExampleIndex].content)}
-                          className="w-full text-left hover:bg-gray-100 focus:outline-none focus:bg-gray-100 transition-colors rounded p-2"
-                        >
-                          {consultationExamples[currentExampleIndex].content}
-                        </button>
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                </div>
-              )}
-            </main>
-          </div>
-
-          <div className="fixed bottom-0 left-0 right-0 bg-white p-2 sm:p-3 shadow-md z-10">
-            <div className="max-w-5xl mx-auto px-2 sm:px-4 lg:px-6">
-              <p className="text-center text-xs text-gray-600 mb-2">
-                <button
-                  onClick={() => fetchLegalDocument('terms_of_service')}
-                  className="text-[#2C4179] hover:underline mr-1 focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2 rounded"
-                >
-                  利用規約
-                </button>
-                と
-                <button
-                  onClick={() => fetchLegalDocument('privacy_policy')}
-                  className="text-[#2C4179] hover:underline ml-1 focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2 rounded"
-                >
-                  プライバシーポリシー
-                </button>
-                に同意の上で利用ください
-              </p>
-              <form onSubmit={handleStartConsultation} className="w-full">
-                <button
-                  type="submit"
-                  className={`w-full rounded-lg py-3 font-semibold text-base transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                    consultationText && !isDefaultText && !isLoading
-                      ? 'bg-[#2C4179] text-white hover:bg-opacity-90 focus:ring-[#2C4179]'
-                      : 'bg-gray-200 text-gray-500 cursor-not-allowed focus:ring-gray-400'
-                  }`}
-                  disabled={!consultationText || isDefaultText || isLoading}
-                >
-                  {isLoading ? '処理中...' : '無料で今すぐ相談を始める'}
-                </button>
-              </form>
+    <>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, 
+ maximum-scale=1, user-scalable=0" />
+      </Head>
+      <AnimatePresence>
+        {!isTransitioning && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="min-h-screen bg-white text-gray-800 font-sans flex flex-col"
+          >
+            <div className="bg-[#2C4179] text-white text-center py-3 px-4 text-sm font-semibold">
+              24時間対応 | 即時回答 | 完全無料
             </div>
-          </div>
-
-          {showModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg p-4 w-full max-w-md max-h-[80vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-3">
-                  <h2 className="text-lg font-semibold">{modalTitle}</h2>
-                  <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#2C4179] rounded">
-                    <X className="w-5 h-5" />
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow overflow-y-auto flex flex-col w-full">
+              <header className="flex justify-between items-center mb-6">
+                <div className="flex items-center">
+                  <Image 
+                    src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/aicon100.png`} 
+                    alt="Healthle Logo" 
+                    width={32} 
+                    height={32} 
+                  />
+                  <h1 className="text-xl font-bold text-[#2C4179] ml-2">Healthle <span className="text-xs font-normal text-gray-500">ヘルスル</span></h1>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2"
+                    aria-label="過去の相談"
+                    onClick={handleViewPastConsultations}
+                  >
+                    <History className="w-5 h-5 text-[#2C4179]" />
+                  </button>
+                  <button
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2"
+                    aria-label="設定"
+                    onClick={handleMenuClick}
+                  >
+                    <Menu className="w-5 h-5 text-[#2C4179]" />
                   </button>
                 </div>
-                <div className="prose max-w-none">
-                  <pre className="whitespace-pre-wrap text-sm">{modalContent}</pre>
+              </header>
+
+              <main className="flex-grow overflow-y-auto flex flex-col pb-24">
+                <h2 className="text-lg font-semibold mb-3 text-[#2C4179]">相談内容</h2>
+                <MissingElementsAlert />
+                <div className="rounded-lg overflow-hidden mb-4">
+                  <div className="border-2 border-gray-200 rounded-lg p-3 bg-white relative">
+                    <textarea
+                      ref={textareaRef}
+                      value={consultationText}
+                      onChange={handleInputChange}
+                      onFocus={() => {
+                        if (isDefaultText) {
+                          setConsultationText('')
+                          setIsDefaultText(false)
+                        }
+                      }}
+                      onBlur={() => {
+                        if (consultationText === '') {
+                          setConsultationText(defaultText)
+                          setIsDefaultText(true)
+                        }
+                      }}
+                      className="w-full min-h-[8rem] resize-none bg-transparent outline-none text-base overflow-y-auto"
+                      style={{
+                        caretColor: 'black',
+                        fontSize: '16px',
+                      }}
+                      aria-label="相談内容を入力"
+                    />
+                    {suggestion && (
+                      <div className="mt-2 bg-blue-50 border-t border-blue-200 p-2">
+                        <div className="flex items-start mb-2">
+                          <LightbulbIcon className="w-4 h-4 text-blue-500 mr-2 mt-1 flex-shrink-0" />
+                          <p className="text-xs text-blue-600 flex-grow">{suggestion}</p>
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={handleSuggestionAccept}
+                            className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          >
+                            追加
+                          </button>
+                          <button
+                            onClick={handleSuggestionClose}
+                            className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                          >
+                            閉じる
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
+                {isDefaultText && consultationExamples.length > 0 && (
+                  <div className="mb-4 bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+                    <h3 className="text-sm font-semibold text-gray-600 p-2 border-b">相談例：</h3>
+                    <div className="p-3">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={currentExampleIndex}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          transition={{ duration: 0.5 }}
+                          className="text-sm text-gray-600"
+                        >
+                          <button
+                            onClick={() => handleExampleClick(consultationExamples[currentExampleIndex].content)}
+                            className="w-full text-left hover:bg-gray-100 focus:outline-none focus:bg-gray-100 transition-colors rounded p-2"
+                          >
+                            {consultationExamples[currentExampleIndex].content}
+                          </button>
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                )}
+              </main>
+            </div>
+
+            <div className="fixed bottom-0 left-0 right-0 bg-white p-2 sm:p-3 shadow-md z-10">
+              <div className="max-w-5xl mx-auto px-2 sm:px-4 lg:px-6">
+                <p className="text-center text-xs text-gray-600 mb-2">
+                  <button
+                    onClick={() => fetchLegalDocument('terms_of_service')}
+                    className="text-[#2C4179] hover:underline mr-1 focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2 rounded"
+                  >
+                    利用規約
+                  </button>
+                  と
+                  <button
+                    onClick={() => fetchLegalDocument('privacy_policy')}
+                    className="text-[#2C4179] hover:underline ml-1 focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2 rounded"
+                  >
+                    プライバシーポリシー
+                  </button>
+                  に同意の上で利用ください
+                </p>
+                <form onSubmit={handleStartConsultation} className="w-full">
+                  <button
+                    type="submit"
+                    className={`w-full rounded-lg py-3 font-semibold text-base transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                      consultationText && !isDefaultText && !isLoading
+                        ? 'bg-[#2C4179] text-white hover:bg-opacity-90 focus:ring-[#2C4179]'
+                        : 'bg-gray-200 text-gray-500 cursor-not-allowed focus:ring-gray-400'
+                    }`}
+                    disabled={!consultationText || isDefaultText || isLoading}
+                  >
+                    {isLoading ? '処理中...' : '無料で今すぐ相談を始める'}
+                  </button>
+                </form>
               </div>
             </div>
-          )}
-        </motion.div>
-      )}
-    </AnimatePresence>
+
+            {showModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg p-4 w-full max-w-md max-h-[80vh] overflow-y-auto">
+                  <div className="flex justify-between items-center mb-3">
+                    <h2 className="text-lg font-semibold">{modalTitle}</h2>
+                    <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#2C4179] rounded">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="prose max-w-none">
+                    <pre className="whitespace-pre-wrap text-sm">{modalContent}</pre>
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
