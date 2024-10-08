@@ -32,7 +32,14 @@ interface ElementCheckResult {
 }
 
 export function ImprovedHealthleDashboardComponent() {
-  const defaultText = `お困りの症状や悩みを具体的にご記入ください。
+  const defaultText = `お困りの症状や悩みを具体的にご記入ください。以下の要素を含めると、より適切なアドバイスが得られます。
+
+・症状の開始時期
+・症状の頻度
+・症状の程度
+・これまでに試した対策
+・生活への影響
+・求めている情報や助言
 `
 
   const [consultationText, setConsultationText] = useState(defaultText)
@@ -48,10 +55,12 @@ export function ImprovedHealthleDashboardComponent() {
   const [currentExampleIndex, setCurrentExampleIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [isDefaultText, setIsDefaultText] = useState(true)
+  const [cursorPosition, setCursorPosition] = useState(0)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
   const router = useRouter()
   const debounceTimer = useRef<NodeJS.Timeout | null>(null)
   const scrollTimer = useRef<NodeJS.Timeout | null>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const MIN_INPUT_LENGTH = 10
   const DEBOUNCE_DELAY = 300
@@ -60,7 +69,6 @@ export function ImprovedHealthleDashboardComponent() {
 
   const SUGGESTION_API_URL = 'https://7u5n8i.buildship.run/nyuuryokuhokann'
   const ELEMENT_CHECK_API_URL = 'https://7u5n8i.buildship.run/hannteiyou'
-
   const fetchSingleSuggestion = useCallback(async (text: string): Promise<string> => {
     try {
       const response = await fetch(SUGGESTION_API_URL, {
@@ -206,20 +214,36 @@ export function ImprovedHealthleDashboardComponent() {
       setIsDefaultText(false)
     }
     setConsultationText(inputText)
+    setCursorPosition(e.target.selectionStart)
+    adjustTextareaHeight()
   }
 
   const handleSuggestionAccept = () => {
     if (suggestion) {
-      const newText = consultationText + suggestion
+      const newText = consultationText.slice(0, cursorPosition) + suggestion + consultationText.slice(cursorPosition)
       setConsultationText(newText)
       setSuggestion('')
       debounceFetchSuggestions(newText)
       if (textareaRef.current) {
         textareaRef.current.focus()
-        textareaRef.current.setSelectionRange(newText.length, newText.length)
+        const newCursorPosition = cursorPosition + suggestion.length
+        textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition)
+        setCursorPosition(newCursorPosition)
+        adjustTextareaHeight()
       }
     }
   }
+
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+    }
+  }
+
+  useEffect(() => {
+    adjustTextareaHeight()
+  }, [consultationText])
 
   const handleSuggestionClose = () => {
     setSuggestion('')
@@ -366,7 +390,6 @@ export function ImprovedHealthleDashboardComponent() {
               </div>
               <div className="flex space-x-2">
                 <button
-                  
                   className="p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2"
                   aria-label="過去の相談"
                   onClick={handleViewPastConsultations}
@@ -387,7 +410,7 @@ export function ImprovedHealthleDashboardComponent() {
               <h2 className="text-lg font-semibold mb-3 text-[#2C4179]">相談内容</h2>
               <MissingElementsAlert />
               <div className="rounded-lg overflow-hidden mb-4">
-                <div className="border-2 border-gray-200 rounded-lg p-3 bg-white">
+                <div className="border-2 border-gray-200 rounded-lg p-3 bg-white relative">
                   <textarea
                     ref={textareaRef}
                     value={consultationText}
@@ -404,38 +427,35 @@ export function ImprovedHealthleDashboardComponent() {
                         setIsDefaultText(true)
                       }
                     }}
-                    className="w-full h-32 resize-none bg-transparent outline-none text-sm"
+                    className="w-full min-h-[8rem] resize-none bg-transparent outline-none text-sm overflow-y-auto"
                     style={{
                       caretColor: 'black',
                     }}
                     aria-label="相談内容を入力"
                   />
-                </div>
-                {suggestion && (
-                  <div className="mt-2 bg-blue-50 border border-blue-200 p-3 rounded-lg">
-                    <div className="flex items-start">
-                      <LightbulbIcon className="w-5 h-5 text-blue-500 mr-2 mt-1 flex-shrink-0" />
-                      <div className="flex-grow">
-                        <p className="text-sm font-semibold text-blue-700 mb-1">提案：</p>
-                        <p className="text-sm text-blue-600">{suggestion}</p>
+                  {suggestion && (
+                    <div className="mt-2 bg-blue-50 border-t border-blue-200 p-2">
+                      <div className="flex items-start mb-2">
+                        <LightbulbIcon className="w-4 h-4 text-blue-500 mr-2 mt-1 flex-shrink-0" />
+                        <p className="text-xs text-blue-600 flex-grow">{suggestion}</p>
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <button
+                          onClick={handleSuggestionAccept}
+                          className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        >
+                          追加
+                        </button>
+                        <button
+                          onClick={handleSuggestionClose}
+                          className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                        >
+                          閉じる
+                        </button>
                       </div>
                     </div>
-                    <div className="flex justify-end mt-2 space-x-2">
-                      <button
-                        onClick={handleSuggestionAccept}
-                        className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      >
-                        追加
-                      </button>
-                      <button
-                        onClick={handleSuggestionClose}
-                        className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
-                      >
-                        閉じる
-                      </button>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
               {isDefaultText && consultationExamples.length > 0 && (
                 <div className="mb-4 bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
