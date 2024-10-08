@@ -69,6 +69,7 @@ export function ImprovedHealthleDashboardComponent() {
 
   const SUGGESTION_API_URL = 'https://7u5n8i.buildship.run/nyuuryokuhokann'
   const ELEMENT_CHECK_API_URL = 'https://7u5n8i.buildship.run/hannteiyou'
+
   const fetchSingleSuggestion = useCallback(async (text: string): Promise<string> => {
     try {
       const response = await fetch(SUGGESTION_API_URL, {
@@ -230,6 +231,7 @@ export function ImprovedHealthleDashboardComponent() {
         textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition)
         setCursorPosition(newCursorPosition)
         adjustTextareaHeight()
+        scrollToBottom()
       }
     }
   }
@@ -241,9 +243,18 @@ export function ImprovedHealthleDashboardComponent() {
     }
   }
 
+  const scrollToBottom = () => {
+    if (textareaRef.current) {
+      textareaRef.current.scrollTop = textareaRef.current.scrollHeight
+    }
+  }
+
   useEffect(() => {
     adjustTextareaHeight()
-  }, [consultationText])
+    if (suggestion) {
+      scrollToBottom()
+    }
+  }, [consultationText, suggestion])
 
   const handleSuggestionClose = () => {
     setSuggestion('')
@@ -378,7 +389,7 @@ export function ImprovedHealthleDashboardComponent() {
             24時間対応 | 即時回答 | 完全無料
           </div>
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow overflow-y-auto flex flex-col w-full">
-            <header className="flex justify-between items-center mb-6">
+            <header className="flex  justify-between items-center mb-6">
               <div className="flex items-center">
                 <Image 
                   src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/aicon100.png`} 
