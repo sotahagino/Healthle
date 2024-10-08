@@ -52,7 +52,6 @@ export function ImprovedHealthleDashboardComponent() {
   const debounceTimer = useRef<NodeJS.Timeout | null>(null)
   const scrollTimer = useRef<NodeJS.Timeout | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const contentRef = useRef<HTMLDivElement>(null)
 
   const MIN_INPUT_LENGTH = 10
   const DEBOUNCE_DELAY = 300
