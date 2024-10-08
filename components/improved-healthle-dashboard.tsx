@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { X, Menu, History, AlertCircle, Check, LightbulbIcon } from 'lucide-react'
+import { X, Menu, History, AlertCircle, LightbulbIcon } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
