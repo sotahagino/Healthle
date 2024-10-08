@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { X, Menu, History, AlertCircle, LightbulbIcon } from 'lucide-react'
+import { X, Menu, History, AlertCircle, LightbulbIcon, CheckCircle } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -32,18 +32,34 @@ interface ElementCheckResult {
   inquiryContent: boolean
 }
 
+const InputGuidelines = () => (
+  <div className="mb-4 bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+    <h3 className="text-sm font-semibold text-gray-600 p-2 border-b">入力ガイドライン：以下の要素を記載することで、より適切なアドバイスが得られます</h3>
+    <div className="p-3">
+      <ul className="list-none space-y-2">
+        {[
+          '症状の開始時期',
+          '症状の頻度',
+          '症状の程度',
+          'これまでに試した対策',
+          '生活への影響',
+          '求めている情報や助言'
+        ].map((item, index) => (
+          <li key={index} className="flex items-start">
+            <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+            <span className="text-sm text-gray-600">{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+)
+
 export function ImprovedHealthleDashboardComponent() {
-  const defaultText = `こちらにお困りの症状や悩みを具体的にご記入ください。以下の要素を含めると、より適切なアドバイスが得られます。
+  const defaultText = `こちらにお困りの症状や悩みを具体的にご記入ください。`
 
-・症状の開始時期
-・症状の頻度
-・症状の程度
-・これまでに試した対策
-・生活への影響
-・求めている情報や助言
-`
-
-  const [consultationText, setConsultationText] = useState(defaultText)
+  const [consultationText, setConsultationText] = useState('')
+  const [showPlaceholder, setShowPlaceholder] = useState(true)
   const [suggestion, setSuggestion] = useState('')
   const [elementCheckResult, setElementCheckResult] = useState<ElementCheckResult | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -55,7 +71,6 @@ export function ImprovedHealthleDashboardComponent() {
   const [consultationExamples, setConsultationExamples] = useState<ConsultationExample[]>([])
   const [currentExampleIndex, setCurrentExampleIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
-  const [isDefaultText, setIsDefaultText] = useState(true)
   const [cursorPosition, setCursorPosition] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -116,7 +131,7 @@ export function ImprovedHealthleDashboardComponent() {
   }, [])
 
   const fetchSuggestions = useCallback(async (text: string) => {
-    if (text.length < MIN_INPUT_LENGTH || text === lastApiCallText || isDefaultText) {
+    if (text.length < MIN_INPUT_LENGTH || text === lastApiCallText) {
       return
     }
 
@@ -138,7 +153,7 @@ export function ImprovedHealthleDashboardComponent() {
       setSuggestion('')
       setElementCheckResult(null)
     }
-  }, [lastApiCallText, fetchSingleSuggestion, fetchElementCheckApi, isDefaultText])
+  }, [lastApiCallText, fetchSingleSuggestion, fetchElementCheckApi])
 
   const debounceFetchSuggestions = useCallback((text: string) => {
     if (debounceTimer.current) {
@@ -154,7 +169,7 @@ export function ImprovedHealthleDashboardComponent() {
   }, [])
 
   useEffect(() => {
-    if (consultationExamples.length > 0 && isDefaultText) {
+    if (consultationExamples.length > 0) {
       scrollTimer.current = setInterval(() => {
         setCurrentExampleIndex((prevIndex) =>
           prevIndex === consultationExamples.length - 1 ? 0 : prevIndex + 1
@@ -167,16 +182,16 @@ export function ImprovedHealthleDashboardComponent() {
         clearInterval(scrollTimer.current)
       }
     }
-  }, [consultationExamples, isDefaultText])
+  }, [consultationExamples])
 
   useEffect(() => {
-    if (!isDefaultText && consultationText.length >= MIN_INPUT_LENGTH) {
+    if (consultationText.length >= MIN_INPUT_LENGTH) {
       debounceFetchSuggestions(consultationText)
     } else {
       setSuggestion('')
       setElementCheckResult(null)
     }
-  }, [consultationText, debounceFetchSuggestions, isDefaultText])
+  }, [consultationText, debounceFetchSuggestions])
 
   useEffect(() => {
     // Prevent zoom on input focus for iOS devices
@@ -226,12 +241,18 @@ export function ImprovedHealthleDashboardComponent() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const inputText = e.target.value
-    if (isDefaultText && inputText !== defaultText) {
-      setIsDefaultText(false)
-    }
     setConsultationText(inputText)
+    setShowPlaceholder(inputText.length === 0)
     setCursorPosition(e.target.selectionStart)
     adjustTextareaHeight()
+  }
+
+  const handleClearInput = () => {
+    setConsultationText('')
+    setShowPlaceholder(true)
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+    }
   }
 
   const handleSuggestionAccept = () => {
@@ -277,7 +298,7 @@ export function ImprovedHealthleDashboardComponent() {
 
   const handleExampleClick = (exampleContent: string) => {
     setConsultationText(exampleContent)
-    setIsDefaultText(false)
+    setShowPlaceholder(false)
     if (scrollTimer.current) {
       clearInterval(scrollTimer.current)
     }
@@ -286,7 +307,7 @@ export function ImprovedHealthleDashboardComponent() {
 
   const handleStartConsultation = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!consultationText || isDefaultText) return
+    if (!consultationText) return
 
     setIsLoading(true)
     setIsTransitioning(true)
@@ -336,7 +357,7 @@ export function ImprovedHealthleDashboardComponent() {
     } finally {
       setIsLoading(false)
     }
-  }, [consultationText, router, isDefaultText])
+  }, [consultationText, router])
 
   const handleViewPastConsultations = () => {
     router.push('/past-consultations')
@@ -377,7 +398,7 @@ export function ImprovedHealthleDashboardComponent() {
   if (error) {
     return (
       <div className="min-h-screen bg-white text-gray-800 font-sans flex items-center justify-center">
-        <div className="text-center">
+        <div  className="text-center">
           <h1 className="text-2xl font-bold mb-4">エラーが発生しました</h1>
           <p>{error}</p>
           <button
@@ -394,7 +415,6 @@ export function ImprovedHealthleDashboardComponent() {
   return (
     <>
       <Head>
-        
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
       </Head>
       <AnimatePresence>
@@ -441,22 +461,12 @@ export function ImprovedHealthleDashboardComponent() {
                 <h2 className="text-lg font-semibold mb-3 text-[#2C4179]">相談内容</h2>
                 <div className="rounded-lg overflow-hidden mb-4">
                   <div className="border-2 border-gray-200 rounded-lg p-3 bg-white relative">
+                    <label htmlFor="consultationInput" className="sr-only">相談内容を入力</label>
                     <textarea
+                      id="consultationInput"
                       ref={textareaRef}
                       value={consultationText}
                       onChange={handleInputChange}
-                      onFocus={() => {
-                        if (isDefaultText) {
-                          setConsultationText('')
-                          setIsDefaultText(false)
-                        }
-                      }}
-                      onBlur={() => {
-                        if (consultationText === '') {
-                          setConsultationText(defaultText)
-                          setIsDefaultText(true)
-                        }
-                      }}
                       className="w-full min-h-[8rem] resize-none bg-transparent outline-none text-base overflow-y-auto"
                       style={{
                         caretColor: 'black',
@@ -464,6 +474,20 @@ export function ImprovedHealthleDashboardComponent() {
                       }}
                       aria-label="相談内容を入力"
                     />
+                    {showPlaceholder && (
+                      <div className="absolute top-3 left-3 right-3 text-gray-400 pointer-events-none whitespace-pre-wrap">
+                        {defaultText}
+                      </div>
+                    )}
+                    {consultationText && (
+                      <button
+                        onClick={handleClearInput}
+                        className="absolute top-2 right-2 p-1 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2"
+                        aria-label="入力内容をクリア"
+                      >
+                        <X className="w-4 h-4 text-gray-600" />
+                      </button>
+                    )}
                     {suggestion && (
                       <div className="mt-2 bg-blue-50 border-t border-blue-200 p-2">
                         <div className="flex items-start mb-2">
@@ -489,7 +513,7 @@ export function ImprovedHealthleDashboardComponent() {
                   </div>
                   <MissingElementsAlert />
                 </div>
-                {isDefaultText && consultationExamples.length > 0 && (
+                {consultationExamples.length > 0 && (
                   <div className="mb-4 bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
                     <h3 className="text-sm font-semibold text-gray-600 p-2 border-b">相談例：</h3>
                     <div className="p-3">
@@ -513,6 +537,7 @@ export function ImprovedHealthleDashboardComponent() {
                     </div>
                   </div>
                 )}
+                <InputGuidelines />
               </main>
             </div>
 
@@ -538,11 +563,11 @@ export function ImprovedHealthleDashboardComponent() {
                   <button
                     type="submit"
                     className={`w-full rounded-lg py-3 font-semibold text-base transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                      consultationText && !isDefaultText && !isLoading
+                      consultationText && !isLoading
                         ? 'bg-[#2C4179] text-white hover:bg-opacity-90 focus:ring-[#2C4179]'
                         : 'bg-gray-200 text-gray-500 cursor-not-allowed focus:ring-gray-400'
                     }`}
-                    disabled={!consultationText || isDefaultText || isLoading}
+                    disabled={!consultationText || isLoading}
                   >
                     {isLoading ? '処理中...' : '無料で今すぐ相談を始める'}
                   </button>
