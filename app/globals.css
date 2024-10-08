@@ -76,3 +76,12 @@ body {
     @apply bg-background text-foreground;
   }
 }
+.markdown-content {
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.markdown-content p {
+  margin-bottom: 0.5rem;
+}

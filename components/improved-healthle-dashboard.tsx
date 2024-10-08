@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { Search, X, Menu, History, AlertCircle } from 'lucide-react'
+import { X, Menu, History, AlertCircle, Check, LightbulbIcon } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -32,8 +32,11 @@ interface ElementCheckResult {
 }
 
 export function ImprovedHealthleDashboardComponent() {
-  const [consultationText, setConsultationText] = useState('')
-  const [apiResponses, setApiResponses] = useState<string[]>([])
+  const defaultText = `お困りの症状や悩みを具体的にご記入ください。
+`
+
+  const [consultationText, setConsultationText] = useState(defaultText)
+  const [suggestion, setSuggestion] = useState('')
   const [elementCheckResult, setElementCheckResult] = useState<ElementCheckResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(false)
@@ -44,13 +47,17 @@ export function ImprovedHealthleDashboardComponent() {
   const [consultationExamples, setConsultationExamples] = useState<ConsultationExample[]>([])
   const [currentExampleIndex, setCurrentExampleIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
+  const [isDefaultText, setIsDefaultText] = useState(true)
   const router = useRouter()
   const debounceTimer = useRef<NodeJS.Timeout | null>(null)
   const scrollTimer = useRef<NodeJS.Timeout | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const MIN_INPUT_LENGTH = 10
   const DEBOUNCE_DELAY = 300
   const SCROLL_INTERVAL = 10000
+  const MIN_CHAR_DIFF = 5
 
   const SUGGESTION_API_URL = 'https://7u5n8i.buildship.run/nyuuryokuhokann'
   const ELEMENT_CHECK_API_URL = 'https://7u5n8i.buildship.run/hannteiyou'
@@ -75,21 +82,7 @@ export function ImprovedHealthleDashboardComponent() {
       console.error('単一の提案取得に失敗しました:', error)
       throw error
     }
-  }, [SUGGESTION_API_URL])
-
-  const fetchSuggestionsApi = useCallback(async (text: string): Promise<string[]> => {
-    try {
-      const responses = await Promise.all([
-        fetchSingleSuggestion(text),
-        fetchSingleSuggestion(text),
-        fetchSingleSuggestion(text)
-      ])
-      return responses
-    } catch (error) {
-      console.error('提案APIの呼び出しに失敗しました:', error)
-      throw error
-    }
-  }, [fetchSingleSuggestion])
+  }, [])
 
   const fetchElementCheckApi = useCallback(async (text: string): Promise<ElementCheckResult> => {
     try {
@@ -111,28 +104,32 @@ export function ImprovedHealthleDashboardComponent() {
       console.error('要素チェックAPIの呼び出しに失敗しました:', error)
       throw error
     }
-  }, [ELEMENT_CHECK_API_URL])
+  }, [])
 
   const fetchSuggestions = useCallback(async (text: string) => {
-    if (text.length < MIN_INPUT_LENGTH || text === lastApiCallText) {
+    if (text.length < MIN_INPUT_LENGTH || text === lastApiCallText || isDefaultText) {
+      return
+    }
+
+    if (Math.abs(text.length - lastApiCallText.length) < MIN_CHAR_DIFF) {
       return
     }
 
     setLastApiCallText(text)
 
     try {
-      const [suggestionsResponse, elementCheckResponse] = await Promise.all([
-        fetchSuggestionsApi(text),
+      const [suggestionResponse, elementCheckResponse] = await Promise.all([
+        fetchSingleSuggestion(text),
         fetchElementCheckApi(text)
       ])
-      setApiResponses(suggestionsResponse.filter(response => response !== 'OK'))
+      setSuggestion(suggestionResponse !== 'OK' ? suggestionResponse : '')
       setElementCheckResult(elementCheckResponse)
     } catch (error) {
       console.error('APIの呼び出しに失敗しました:', error)
-      setApiResponses([])
+      setSuggestion('')
       setElementCheckResult(null)
     }
-  }, [lastApiCallText, fetchSuggestionsApi, fetchElementCheckApi, MIN_INPUT_LENGTH])
+  }, [lastApiCallText, fetchSingleSuggestion, fetchElementCheckApi, isDefaultText])
 
   const debounceFetchSuggestions = useCallback((text: string) => {
     if (debounceTimer.current) {
@@ -141,14 +138,14 @@ export function ImprovedHealthleDashboardComponent() {
     debounceTimer.current = setTimeout(() => {
       fetchSuggestions(text)
     }, DEBOUNCE_DELAY)
-  }, [fetchSuggestions, DEBOUNCE_DELAY])
+  }, [fetchSuggestions])
 
   useEffect(() => {
     fetchConsultationExamples()
   }, [])
 
   useEffect(() => {
-    if (consultationExamples.length > 0 && !consultationText) {
+    if (consultationExamples.length > 0 && isDefaultText) {
       scrollTimer.current = setInterval(() => {
         setCurrentExampleIndex((prevIndex) =>
           prevIndex === consultationExamples.length - 1 ? 0 : prevIndex + 1
@@ -161,16 +158,16 @@ export function ImprovedHealthleDashboardComponent() {
         clearInterval(scrollTimer.current)
       }
     }
-  }, [consultationExamples, consultationText, SCROLL_INTERVAL])
+  }, [consultationExamples, isDefaultText])
 
   useEffect(() => {
-    if (consultationText.length >= MIN_INPUT_LENGTH) {
+    if (!isDefaultText && consultationText.length >= MIN_INPUT_LENGTH) {
       debounceFetchSuggestions(consultationText)
     } else {
-      setApiResponses([])
+      setSuggestion('')
       setElementCheckResult(null)
     }
-  }, [consultationText, debounceFetchSuggestions, MIN_INPUT_LENGTH])
+  }, [consultationText, debounceFetchSuggestions, isDefaultText])
 
   const fetchConsultationExamples = async () => {
     try {
@@ -206,18 +203,32 @@ export function ImprovedHealthleDashboardComponent() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const inputText = e.target.value
+    if (isDefaultText && inputText !== defaultText) {
+      setIsDefaultText(false)
+    }
     setConsultationText(inputText)
   }
 
-  const handleApiResponseClick = (response: string) => {
-    const updatedText = consultationText + (consultationText ? '\n' : '') + response
-    setConsultationText(updatedText)
-    setApiResponses([])
-    fetchSuggestions(updatedText)
+  const handleSuggestionAccept = () => {
+    if (suggestion) {
+      const newText = consultationText + suggestion
+      setConsultationText(newText)
+      setSuggestion('')
+      debounceFetchSuggestions(newText)
+      if (textareaRef.current) {
+        textareaRef.current.focus()
+        textareaRef.current.setSelectionRange(newText.length, newText.length)
+      }
+    }
+  }
+
+  const handleSuggestionClose = () => {
+    setSuggestion('')
   }
 
   const handleExampleClick = (exampleContent: string) => {
     setConsultationText(exampleContent)
+    setIsDefaultText(false)
     if (scrollTimer.current) {
       clearInterval(scrollTimer.current)
     }
@@ -226,7 +237,7 @@ export function ImprovedHealthleDashboardComponent() {
 
   const handleStartConsultation = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!consultationText) return
+    if (!consultationText || isDefaultText) return
 
     setIsLoading(true)
     setIsTransitioning(true)
@@ -248,7 +259,6 @@ export function ImprovedHealthleDashboardComponent() {
         concern: consultationText,
       }
 
-      // ユーザーがログインしている場合のみuidを追加
       if (user) {
         insertData.uid = user.id
       }
@@ -277,7 +287,7 @@ export function ImprovedHealthleDashboardComponent() {
     } finally {
       setIsLoading(false)
     }
-  }, [consultationText, router])
+  }, [consultationText, router, isDefaultText])
 
   const handleViewPastConsultations = () => {
     router.push('/past-consultations')
@@ -332,17 +342,6 @@ export function ImprovedHealthleDashboardComponent() {
     )
   }
 
-  const shouldShowSuggestions = apiResponses.length > 0
-
-  const placeholderText = `以下の要素を参考に、お困りの症状や悩みを具体的にご記入ください。
-
-①症状や悩みの具体的な内容
-②症状の開始時期
-③症状の頻度
-④これまでに試した対策
-⑤生活への影響
-⑥求めている情報や助言`
-
   return (
     <AnimatePresence>
       {!isTransitioning && (
@@ -368,6 +367,7 @@ export function ImprovedHealthleDashboardComponent() {
               </div>
               <div className="flex space-x-2">
                 <button
+                  
                   className="p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2"
                   aria-label="過去の相談"
                   onClick={handleViewPastConsultations}
@@ -387,31 +387,58 @@ export function ImprovedHealthleDashboardComponent() {
             <main className="flex-grow overflow-y-auto flex flex-col pb-24">
               <h2 className="text-lg font-semibold mb-3 text-[#2C4179]">相談内容</h2>
               <MissingElementsAlert />
-              <div className="relative rounded-lg overflow-hidden mb-4">
-                <textarea
-                  value={consultationText}
-                  onChange={handleInputChange}
-                  placeholder={placeholderText}
-                  className="w-full p-3 border-2 border-gray-200 bg-white text-gray-800 placeholder-gray-500 focus:outline-none focus:border-[#2C4179] h-64 text-sm resize-none rounded-lg transition-colors"
-                  aria-label="相談内容を入力"
-                />
-              </div>
-              {shouldShowSuggestions && (
-                <div className="mb-4 bg-white border border-gray-300 rounded-lg shadow-sm">
-                  <h3 className="text-sm font-semibold text-gray-600 p-2 border-b">入力の提案：</h3>
-                  {apiResponses.map((response, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleApiResponseClick(response)}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 transition-colors flex items-center border-b last:border-b-0"
-                    >
-                      <Search className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
-                      <span className="text-sm">{response}</span>
-                    </button>
-                  ))}
+              <div className="rounded-lg overflow-hidden mb-4">
+                <div className="border-2 border-gray-200 rounded-lg p-3 bg-white">
+                  <textarea
+                    ref={textareaRef}
+                    value={consultationText}
+                    onChange={handleInputChange}
+                    onFocus={() => {
+                      if (isDefaultText) {
+                        setConsultationText('')
+                        setIsDefaultText(false)
+                      }
+                    }}
+                    onBlur={() => {
+                      if (consultationText === '') {
+                        setConsultationText(defaultText)
+                        setIsDefaultText(true)
+                      }
+                    }}
+                    className="w-full h-32 resize-none bg-transparent outline-none text-sm"
+                    style={{
+                      caretColor: 'black',
+                    }}
+                    aria-label="相談内容を入力"
+                  />
                 </div>
-              )}
-              {!consultationText && consultationExamples.length > 0 && (
+                {suggestion && (
+                  <div className="mt-2 bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                    <div className="flex items-start">
+                      <LightbulbIcon className="w-5 h-5 text-blue-500 mr-2 mt-1 flex-shrink-0" />
+                      <div className="flex-grow">
+                        <p className="text-sm font-semibold text-blue-700 mb-1">提案：</p>
+                        <p className="text-sm text-blue-600">{suggestion}</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end mt-2 space-x-2">
+                      <button
+                        onClick={handleSuggestionAccept}
+                        className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      >
+                        追加
+                      </button>
+                      <button
+                        onClick={handleSuggestionClose}
+                        className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                      >
+                        閉じる
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              {isDefaultText && consultationExamples.length > 0 && (
                 <div className="mb-4 bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
                   <h3 className="text-sm font-semibold text-gray-600 p-2 border-b">相談例：</h3>
                   <div className="p-3">
@@ -438,8 +465,8 @@ export function ImprovedHealthleDashboardComponent() {
             </main>
           </div>
 
-          <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-md z-10">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="fixed bottom-0 left-0 right-0 bg-white p-2 sm:p-3 shadow-md z-10">
+            <div className="max-w-5xl mx-auto px-2 sm:px-4 lg:px-6">
               <p className="text-center text-xs text-gray-600 mb-2">
                 <button
                   onClick={() => fetchLegalDocument('terms_of_service')}
@@ -460,11 +487,11 @@ export function ImprovedHealthleDashboardComponent() {
                 <button
                   type="submit"
                   className={`w-full rounded-lg py-3 font-semibold text-base transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                    consultationText && !isLoading
+                    consultationText && !isDefaultText && !isLoading
                       ? 'bg-[#2C4179] text-white hover:bg-opacity-90 focus:ring-[#2C4179]'
                       : 'bg-gray-200 text-gray-500 cursor-not-allowed focus:ring-gray-400'
                   }`}
-                  disabled={!consultationText || isLoading}
+                  disabled={!consultationText || isDefaultText || isLoading}
                 >
                   {isLoading ? '処理中...' : '無料で今すぐ相談を始める'}
                 </button>
