@@ -68,12 +68,12 @@ export function ImprovedHealthleDashboardComponent() {
   const SCROLL_INTERVAL = 10000
   const MIN_CHAR_DIFF = 5
 
-  const SUGGESTION_API_URL = 'https://7u5n8i.buildship.run/nyuuryokuhokann'
-  const ELEMENT_CHECK_API_URL = 'https://7u5n8i.buildship.run/hannteiyou'
+  const SUGGESTION_API_URL = process.env.NEXT_PUBLIC_SUGGESTION_API_URL
+  const ELEMENT_CHECK_API_URL = process.env.NEXT_PUBLIC_ELEMENT_CHECK_API_URL
 
   const fetchSingleSuggestion = useCallback(async (text: string): Promise<string> => {
     try {
-      const response = await fetch(SUGGESTION_API_URL, {
+      const response = await fetch(SUGGESTION_API_URL!, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +95,7 @@ export function ImprovedHealthleDashboardComponent() {
 
   const fetchElementCheckApi = useCallback(async (text: string): Promise<ElementCheckResult> => {
     try {
-      const response = await fetch(ELEMENT_CHECK_API_URL, {
+      const response = await fetch(ELEMENT_CHECK_API_URL!, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
