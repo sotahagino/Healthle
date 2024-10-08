@@ -360,7 +360,7 @@ export function ImprovedHealthleDashboardComponent() {
     if (missingElements.length === 0) return null
 
     return (
-      <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+      <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
         <div className="flex items-center mb-2">
           <AlertCircle className="w-5 h-5 text-yellow-500 mr-2" />
           <h3 className="text-sm font-semibold text-yellow-700">以下の要素を追加すると、より適切なアドバイスが得られます：</h3>
@@ -394,8 +394,8 @@ export function ImprovedHealthleDashboardComponent() {
   return (
     <>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, 
- maximum-scale=1, user-scalable=0" />
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
       </Head>
       <AnimatePresence>
         {!isTransitioning && (
@@ -439,7 +439,6 @@ export function ImprovedHealthleDashboardComponent() {
 
               <main className="flex-grow overflow-y-auto flex flex-col pb-24">
                 <h2 className="text-lg font-semibold mb-3 text-[#2C4179]">相談内容</h2>
-                <MissingElementsAlert />
                 <div className="rounded-lg overflow-hidden mb-4">
                   <div className="border-2 border-gray-200 rounded-lg p-3 bg-white relative">
                     <textarea
@@ -488,6 +487,7 @@ export function ImprovedHealthleDashboardComponent() {
                       </div>
                     )}
                   </div>
+                  <MissingElementsAlert />
                 </div>
                 {isDefaultText && consultationExamples.length > 0 && (
                   <div className="mb-4 bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
