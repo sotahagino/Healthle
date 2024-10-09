@@ -80,7 +80,7 @@ export function ImprovedHealthleDashboardComponent() {
 
   const MIN_INPUT_LENGTH = 10
   const DEBOUNCE_DELAY = 300
-  const SCROLL_INTERVAL = 10000
+  const SCROLL_INTERVAL = 7000
   const MIN_CHAR_DIFF = 5
 
   const SUGGESTION_API_URL = process.env.NEXT_PUBLIC_SUGGESTION_API_URL

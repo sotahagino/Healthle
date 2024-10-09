@@ -31,7 +31,6 @@ interface SuggestionContent {
   q5: string
 }
 
-// MessageComponentを別の関数として定義
 function MessageComponentBase({ message }: { message: Message }) {
   return (
     <div className="my-4 p-4 bg-white rounded-lg shadow">
@@ -112,7 +111,6 @@ function MessageComponentBase({ message }: { message: Message }) {
   )
 }
 
-// React.memoでラップし、display nameを設定
 const MessageComponent = React.memo(MessageComponentBase)
 MessageComponent.displayName = 'MessageComponent'
 
@@ -309,16 +307,14 @@ export default function ChatInterface() {
         console.log('相談データを取得しました:', data)
         setThreadID(data.thread_id || null)
 
-        // 質問票のデータを取得
         const questionnaireData = [
           { question: data.question_1, answer: data.answer_1 },
           { question: data.question_2, answer: data.answer_2 },
           { question: data.question_3, answer: data.answer_3 },
           { question: data.question_4, answer: data.answer_4 },
           { question: data.question_5, answer: data.answer_5 },
-        ].filter(item => item.question && item.answer) // 空の項目を除外
+        ].filter(item => item.question && item.answer)
 
-        // 質問票のデータをプロンプトに含める
         const questionnairePrompt = questionnaireData.map(item => 
           `質問: ${item.question}\n回答: ${item.answer}`
         ).join('\n\n')
@@ -362,7 +358,7 @@ export default function ChatInterface() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as  Node)) {
         setIsDropdownOpen(false)
       }
     }
@@ -372,6 +368,17 @@ export default function ChatInterface() {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
+
+  useEffect(() => {
+    if (isDropdownOpen && suggestionsRef.current) {
+      const scrollOptions: ScrollIntoViewOptions = {
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'start'
+      }
+      suggestionsRef.current.scrollIntoView(scrollOptions)
+    }
+  }, [isDropdownOpen])
 
   const fetchChatSenntakusi = async (prompt: string) => {
     try {
@@ -498,17 +505,6 @@ export default function ChatInterface() {
       setRegistrationError('登録中にエラーが発生しました。もう一度お試しください。')
     }
   }
-
-  useEffect(() => {
-    if (isDropdownOpen && suggestionsRef.current) {
-      const { bottom } = suggestionsRef.current.getBoundingClientRect()
-      const viewportHeight = window.innerHeight
-
-      if (bottom > viewportHeight) {
-        suggestionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
-      }
-    }
-  }, [isDropdownOpen])
 
   const renderedMessages = useMemo(() => {
     return messages.map((message) => (
@@ -637,7 +633,7 @@ export default function ChatInterface() {
               {isDropdownOpen && suggestionContent && (
                 <div 
                   ref={suggestionsRef}
-                  className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                  className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
                   role="menu"
                   aria-orientation="vertical"
                   aria-labelledby="options-menu"
