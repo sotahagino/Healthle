@@ -135,7 +135,6 @@ export default function ChatInterface() {
   const [threadID, setThreadID] = useState<string | null>(null)
   const initializationRef = useRef(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const chatContainerRef = useRef<HTMLDivElement>(null)
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputMessage(e.target.value)
@@ -359,8 +358,7 @@ export default function ChatInterface() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as  Node)) {
         setIsDropdownOpen(false)
       }
     }
@@ -381,12 +379,6 @@ export default function ChatInterface() {
       suggestionsRef.current.scrollIntoView(scrollOptions)
     }
   }, [isDropdownOpen])
-
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
-    }
-  }, [messages])
 
   const fetchChatSenntakusi = async (prompt: string) => {
     try {
@@ -621,66 +613,68 @@ export default function ChatInterface() {
             <span className="sr-only">ホームに戻る</span>
           </Link>
         </header>
-        <div className="flex-1 overflow-y-auto" ref={chatContainerRef}>
-          <div className="max-w-3xl mx-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="max-w-3xl mx-auto space-y-4">
             {renderedMessages}
-            <div className={`bg-white border-t border-gray-200 p-4 ${isDropdownOpen ? 'mb-4' : ''}`}>
-              <div className="relative mb-3" ref={dropdownRef}>
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full bg-[#E6EDF2] text-[#002341] px-4 py-2 rounded-lg text-sm hover:bg-[#D1E0ED] transition-colors flex justify-between items-center"
-                  aria-expanded={isDropdownOpen}
-                  aria-haspopup="true"
+          </div>
+        </div>
+        <div className={`bg-white border-t border-gray-200 p-4 ${isDropdownOpen ? 'mb-4' : ''}`}>
+          <div className="max-w-3xl mx-auto">
+            <div className="relative mb-3" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full bg-[#E6EDF2] text-[#002341] px-4 py-2 rounded-lg text-sm hover:bg-[#D1E0ED] transition-colors flex justify-between items-center"
+                aria-expanded={isDropdownOpen}
+                aria-haspopup="true"
+              >
+                <span>質問の候補</span>
+                {isDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+              {isDropdownOpen && suggestionContent && (
+                <div 
+                  ref={suggestionsRef}
+                  className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
+                  role="menu"
+                  aria-orientation="vertical"
+                  aria-labelledby="options-menu"
                 >
-                  <span>質問の候補</span>
-                  {isDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </button>
-                {isDropdownOpen && suggestionContent && (
-                  <div 
-                    ref={suggestionsRef}
-                    className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
-                    role="menu"
-                    aria-orientation="vertical"
-                    aria-labelledby="options-menu"
-                  >
-                    {Object.values(suggestionContent).map((suggestion, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="block w-full text-left px-4 py-2 text-sm text-[#002341] hover:bg-[#E6EDF2] transition-colors"
-                        role="menuitem"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <form onSubmit={handleSendMessage} className="flex items-end">
-                <div className="relative flex-1">
-                  <textarea
-                    ref={textareaRef}
-                    value={inputMessage}
-                    onChange={handleTextareaChange}
-                    placeholder="気になることはありますか？"
-                    className="w-full p-4 pr-12 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#002341] resize-none overflow-hidden"
-                    disabled={isLoading}
-                    rows={1}
-                    style={{ minHeight: '2.5rem', paddingRight: '3rem' }}
-                  />
-                  <button
-                    type="submit"
-                    className={`absolute right-2 top-2 bg-[#002341] text-white p-2 rounded-full hover:bg-opacity-90 transition-colors flex items-center justify-center ${
-                      isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                    aria-label="送信"
-                    disabled={isLoading}
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
+                  {Object.values(suggestionContent).map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="block w-full text-left px-4 py-2 text-sm text-[#002341] hover:bg-[#E6EDF2] transition-colors"
+                      role="menuitem"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
                 </div>
-              </form>
+              )}
             </div>
+            <form onSubmit={handleSendMessage} className="flex items-end">
+              <div className="relative flex-1">
+                <textarea
+                  ref={textareaRef}
+                  value={inputMessage}
+                  onChange={handleTextareaChange}
+                  placeholder="気になることはありますか？"
+                  className="w-full p-4 pr-12 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#002341] resize-none overflow-hidden"
+                  disabled={isLoading}
+                  rows={1}
+                  style={{ minHeight: '2.5rem', paddingRight: '3rem' }}
+                />
+                <button
+                  type="submit"
+                  className={`absolute right-2 top-2 bg-[#002341] text-white p-2 rounded-full hover:bg-opacity-90 transition-colors flex items-center justify-center ${
+                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  aria-label="送信"
+                  disabled={isLoading}
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
