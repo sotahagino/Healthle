@@ -141,7 +141,7 @@ export default function ChatInterface() {
   const consultationId = searchParams.get('id')
   const messageIdRef = useRef(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const suggestionsRef = useRef<HTMLDivElement>(null)
+  //const suggestionsRef = useRef<HTMLDivElement>(null)
   const [threadID, setThreadID] = useState<string | null>(null)
   const [assistantInstructions, setAssistantInstructions] = useState<string | null>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)

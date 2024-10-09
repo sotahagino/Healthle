@@ -106,7 +106,7 @@ export function ImprovedHealthleDashboardComponent() {
       console.error('単一の提案取得に失敗しました:', error)
       throw error
     }
-  }, [])
+  }, [SUGGESTION_API_URL])
 
   const fetchElementCheckApi = useCallback(async (text: string): Promise<ElementCheckResult> => {
     try {
@@ -128,7 +128,7 @@ export function ImprovedHealthleDashboardComponent() {
       console.error('要素チェックAPIの呼び出しに失敗しました:', error)
       throw error
     }
-  }, [])
+  }, [ELEMENT_CHECK_API_URL])
 
   const fetchSuggestions = useCallback(async (text: string) => {
     if (text.length < MIN_INPUT_LENGTH || text === lastApiCallText) {
