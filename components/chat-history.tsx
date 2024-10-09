@@ -618,26 +618,25 @@ export default function ChatInterface() {
           </div>
         </div>
         <div className="bg-white border-t border-gray-200 p-4">
-          <div className="max-w-3xl mx-auto">
-            <div className="relative mb-3" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full bg-[#E6EDF2] text-[#002341] px-4 py-2 rounded-lg text-sm hover:bg-[#D1E0ED] transition-colors flex justify-between items-center"
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-3">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="w-full bg-[#E6EDF2] text-[#002341] px-4 py-2 rounded-lg text-sm hover:bg-[#D1E0ED] transition-colors flex justify-between items-center"
+            >
+              <span>質問の候補</span>
+              {isDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            {isDropdownOpen && suggestionContent && (
+              <div 
+                className="mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
               >
-                <span>質問の候補</span>
-                {isDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-              {isDropdownOpen && suggestionContent && (
-                <div 
-                  ref={suggestionsRef}
-                  className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                >
-                  {Object.values(suggestionContent).map((suggestion, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="block w-full text-left px-4 py-2 text-sm text-[#002341] hover:bg-[#E6EDF2] transition-colors"
-                    >
+                {Object.values(suggestionContent).map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className="block w-full text-left px-4 py-2 text-sm text-[#002341] hover:bg-[#E6EDF2] transition-colors border-b border-gray-200 last:border-b-0"
+                  >
                       {suggestion}
                     </button>
                   ))}

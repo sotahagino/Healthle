@@ -618,33 +618,32 @@ export default function ChatInterface() {
             {renderedMessages}
           </div>
         </div>
-        <div className={`bg-white border-t border-gray-200 p-4 ${isDropdownOpen ? 'mb-4' : ''}`}>
-          <div className="max-w-3xl mx-auto">
-            <div className="relative mb-3" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full bg-[#E6EDF2] text-[#002341] px-4 py-2 rounded-lg text-sm hover:bg-[#D1E0ED] transition-colors flex justify-between items-center"
-                aria-expanded={isDropdownOpen}
-                aria-haspopup="true"
+        <div className={`bg-white border-t border-gray-200 p-4`}>
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-3">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="w-full bg-[#E6EDF2] text-[#002341] px-4 py-2 rounded-lg text-sm hover:bg-[#D1E0ED] transition-colors flex justify-between items-center"
+              aria-expanded={isDropdownOpen}
+              aria-haspopup="true"
+            >
+              <span>質問の候補</span>
+              {isDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            {isDropdownOpen && suggestionContent && (
+              <div 
+                className="mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
+                role="menu"
+                aria-orientation="vertical"
+                aria-labelledby="options-menu"
               >
-                <span>質問の候補</span>
-                {isDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-              {isDropdownOpen && suggestionContent && (
-                <div 
-                  ref={suggestionsRef}
-                  className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
-                  role="menu"
-                  aria-orientation="vertical"
-                  aria-labelledby="options-menu"
-                >
-                  {Object.values(suggestionContent).map((suggestion, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="block w-full text-left px-4 py-2 text-sm text-[#002341] hover:bg-[#E6EDF2] transition-colors"
-                      role="menuitem"
-                    >
+                {Object.values(suggestionContent).map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className="block w-full text-left px-4 py-2 text-sm text-[#002341] hover:bg-[#E6EDF2] transition-colors border-b border-gray-200 last:border-b-0"
+                    role="menuitem"
+                  >
                       {suggestion}
                     </button>
                   ))}
