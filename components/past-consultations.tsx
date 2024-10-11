@@ -11,12 +11,21 @@ const supabase: SupabaseClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-interface Consultation {
-  id: string
-  concern: string
-  created_at: string
-  consultation_id: string
+interface ChatSession {
+  id: string;
+  thread_id: string;
+  created_at: string;
+  initial_consultations: {
+    consultation_text: string;
+  } | null;
 }
+
+type Consultation = {
+  id: string;
+  thread_id: string;
+  created_at: string;
+  initial_consultation: string;
+};
 
 function AuthModal({ onClose, onAuth }: { onClose: () => void, onAuth: () => void }) {
   const [isLogin, setIsLogin] = useState(true)
@@ -126,6 +135,40 @@ export default function PastConsultations() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const router = useRouter()
 
+  const fetchPastConsultations = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('chat_sessions')
+        .select(`
+          id,
+          thread_id,
+          created_at,
+          initial_consultations (consultation_text)
+        `)
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      console.log('Fetched data:', JSON.stringify(data, null, 2));
+
+      const processedData = (data as unknown as ChatSession[]).map((session): Consultation => ({
+        id: session.id,
+        thread_id: session.thread_id,
+        created_at: session.created_at,
+        initial_consultation: truncateText(session.initial_consultations?.consultation_text || '初期相談なし', 30),
+      }));
+
+      setConsultations(processedData);
+    } catch (error) {
+      console.error('過去の相談履歴の取得に失敗しました:', error);
+      setError('過去の相談履歴の取得に失敗しました。');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const checkLoginStatus = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     setIsLoggedIn(!!user)
@@ -134,57 +177,36 @@ export default function PastConsultations() {
     } else {
       setLoading(false)
     }
-  }, [])
+  }, [fetchPastConsultations])
 
   useEffect(() => {
     checkLoginStatus()
   }, [checkLoginStatus])
 
-  async function fetchPastConsultations() {
-    try {
-      setLoading(true)
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) {
-        throw new Error('ユーザーが認証されていません。')
-      }
-
-      const { data, error } = await supabase
-        .from('consultation_data')
-        .select('id, concern, created_at, consultation_id')
-        .eq('uid', user.id)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-
-      setConsultations(data || [])
-    } catch (error) {
-      console.error('Error fetching past consultations:', error)
-      setError('過去の相談履歴の取得に失敗しました。')
-    } finally {
-      setLoading(false)
-    }
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + '...';
   }
 
-  const handleConsultationClick = (consultationId: string) => {
-    router.push(`/chathistory?id=${consultationId}`)
-  }
+  const handleConsultationClick = (threadId: string) => {
+    router.push(`/chat-history?thread_id=${threadId}`);
+  };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })
-  }
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
 
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
-  }
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  };
 
   const handleAuth = () => {
-    setShowAuthModal(false)
-    setIsLoggedIn(true)
-    fetchPastConsultations()
-  }
+    setShowAuthModal(false);
+    setIsLoggedIn(true);
+    fetchPastConsultations();
+  };
 
   if (error) {
     return (
@@ -200,7 +222,7 @@ export default function PastConsultations() {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -216,7 +238,7 @@ export default function PastConsultations() {
           </button>
           <div className="flex items-center">
             <Image 
-              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/aicon100.png`}
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle/aicon100_1010.png?t=2024-10-10T13%3A50%3A50.827Z`}
               alt="Healthle Logo" 
               width={40} 
               height={40} 
@@ -249,12 +271,12 @@ export default function PastConsultations() {
               {consultations.map((consultation) => (
                 <li 
                   key={consultation.id}
-                  onClick={() => handleConsultationClick(consultation.consultation_id)}
+                  onClick={() => handleConsultationClick(consultation.thread_id)}
                   className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                 >
                   <div className="p-4 flex justify-between items-center">
                     <div>
-                      <h2 className="text-lg font-semibold text-[#2C4179] mb-2">{consultation.concern}</h2>
+                      <h2 className="text-lg font-semibold text-[#2C4179] mb-2">{consultation.initial_consultation}</h2>
                       <div className="flex items-center text-sm text-gray-600">
                         <Calendar className="w-4 h-4 mr-1" />
                         <span className="mr-4">{formatDate(consultation.created_at)}</span>

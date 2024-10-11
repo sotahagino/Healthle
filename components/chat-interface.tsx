@@ -43,7 +43,7 @@ function MessageComponentBase({ message }: { message: Message }) {
           )
         ) : (
           <Image
-            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/doctor100.png`}
+            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle/doctor100_1010.png?t=2024-10-10T12%3A00%3A19.324Z`}
             alt="医師のアイコン"
             width={24}
             height={24}
@@ -114,8 +114,13 @@ function MessageComponentBase({ message }: { message: Message }) {
 const MessageComponent = React.memo(MessageComponentBase)
 MessageComponent.displayName = 'MessageComponent'
 
-export default function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([])
+interface ChatInterfaceProps {
+  threadId?: string | null
+  initialMessages?: Message[]
+}
+
+export default function ChatInterface({ threadId, initialMessages = [] }: ChatInterfaceProps) {
+  const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [suggestionContent, setSuggestionContent] = useState<SuggestionContent | null>(null)
@@ -127,59 +132,52 @@ export default function ChatInterface() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [registrationError, setRegistrationError] = useState<string | null>(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const searchParams = useSearchParams()
-  const consultationId = searchParams.get('id')
+  const sessionId = searchParams.get('session_id')
   const messageIdRef = useRef(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
-  const [threadID, setThreadID] = useState<string | null>(null)
+  const [threadID, setThreadID] = useState<string | null>(threadId || null)
   const initializationRef = useRef(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputMessage(e.target.value)
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-    }
-  }
-
-  const checkLoginStatus = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    setIsLoggedIn(!!session)
-  }, [])
-
+  // メッセージをデータベースに保存する関数
   const saveMessageToDatabase = useCallback(async (message: Message) => {
-    if (!consultationId) {
-      console.error('相談IDが利用できません')
+    if (!sessionId) {
+      console.error('チャットセッションIDが利用できません')
+      return
+    }
+  
+    // "準備中" メッセージは保存しない
+    if (message.text === '回答を準備中です...') {
       return
     }
   
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      const uid = user ? user.id : null
-
+      console.log('メッセージ保存試行:', message)
+      
       const { data, error } = await supabase
         .from('chat_messages')
         .insert({
-          consultation_id: consultationId,
+          chat_session_id: sessionId,
           sender: message.sender,
           message: message.text,
           is_question: message.isQuestion || false,
-          uid: uid,
         })
+        .select()
   
-      if (error) {
-        console.error('メッセージのデータベース保存中にエラーが発生しました:', error)
-        throw error
-      }
+      if (error) throw error
   
       console.log('メッセージが正常に保存されました:', data)
+      return data
     } catch (error) {
       console.error('saveMessageToDatabaseでエラーが発生しました:', error)
+      throw error
     }
-  }, [consultationId])
+  }, [sessionId])
 
+  // メッセージを保存し追加する関数
   const addMessage = useCallback((text: string, sender: 'user' | 'ai', isQuestion: boolean = false) => {
     messageIdRef.current += 1
     const newMessage: Message = {
@@ -190,14 +188,17 @@ export default function ChatInterface() {
     }
     setMessages(prevMessages => [...prevMessages, newMessage])
     
-    if (sender === 'user') {
+    if (sessionId) {
       saveMessageToDatabase(newMessage)
         .catch(error => console.error('メッセージ追加後の保存中にエラーが発生しました:', error))
+    } else {
+      console.warn('チャットセッションIDがないため、メッセージを保存できません')
     }
-  
-    return newMessage.id
-  }, [saveMessageToDatabase])
 
+    return newMessage.id
+  }, [sessionId, saveMessageToDatabase])
+
+  // メッセージを更新する関数
   const updateMessage = useCallback((id: string, text: string) => {
     setMessages(prevMessages =>
       prevMessages.map(msg =>
@@ -206,6 +207,38 @@ export default function ChatInterface() {
     )
   }, [])
 
+  // 選択肢生成APIを呼び出す関数
+  const fetchChatSenntakusi = useCallback(async (prompt: string) => {
+    try {
+      console.log('選択肢生成APIを呼び出し中...', process.env.NEXT_PUBLIC_CHATSENNTAKUSI_URL);
+      const response = await fetch('https://7u5n8i.buildship.run/chatsenntakusi', { // 固定のURLを使用
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      })
+
+      console.log('APIレスポンスステータス:', response.status);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log('選択肢生成APIからの応答:', data);
+      if (data.status === 'OK' && data.result && data.result.content) {
+        setSuggestionContent(data.result.content)
+        console.log('選択肢が正常に設定されました:', data.result.content);
+      } else {
+        console.error('予期しないレスポンス形式:', data)
+      }
+    } catch (error) {
+      console.error('チャット提案の取得中にエラーが発生しました:', error)
+    }
+  }, []);
+
+  // 回答用APIからのストリーミングレスポンスを理する関数
   const streamResponse = useCallback(async (message: string, messageId: string, threadId: string | null) => {
     try {
       console.log('APIにリクエストを送信中:', process.env.NEXT_PUBLIC_WEBASSISTANT_URL)
@@ -227,15 +260,16 @@ export default function ChatInterface() {
       const newThreadId = response.headers.get('x-thread-id')
       if (newThreadId) {
         setThreadID(newThreadId)
-        
-        if (consultationId) {
+        if (sessionId) {
           const { error } = await supabase
-            .from('consultation_data')
+            .from('chat_sessions')
             .update({ thread_id: newThreadId })
-            .eq('consultation_id', consultationId)
+            .eq('id', sessionId)
           
           if (error) {
-            console.error('thread_idのデータベース保存中にエラーが発生しました:', error)
+            console.error('chat_sessionsの更新中にエラーが発生しました:', error)
+          } else {
+            console.log('chat_sessionsが正常に更新されました')
           }
         }
       }
@@ -264,18 +298,31 @@ export default function ChatInterface() {
               }
             } catch (error) {
               console.error('JSONの解析エラー:', error)
+              // 一部の行が失敗しても続行
             }
           }
         }
       }
   
       if (accumulatedResponse) {
-        await saveMessageToDatabase({
-          id: messageId,
-          text: accumulatedResponse,
-          sender: 'ai',
-          isQuestion: false
-        })
+        console.log('保存するAIメッセージ:', accumulatedResponse)
+        if (sessionId) {
+          try {
+            const savedMessage = await saveMessageToDatabase({
+              id: messageId,
+              text: accumulatedResponse,
+              sender: 'ai',
+              isQuestion: false
+            })
+            console.log('AIメッセージが保存されました:', savedMessage)
+          } catch (error) {
+            console.error('AIメッセージの保存中にエラーが発しました:', error)
+          }
+        } else {
+          console.warn('チャットセッションIDがないため、AIの応答を保存できません')
+        }
+        // AIの応答が完了した後に選択肢生成APIを呼び出す
+        console.log('AIの応答が完了しました。選択肢生成APIを呼び出します。');
         await fetchChatSenntakusi(accumulatedResponse)
       } else {
         throw new Error('APIからレスポンスを受信できませんでした')
@@ -284,147 +331,86 @@ export default function ChatInterface() {
       console.error('streamResponseでエラーが発生しました:', error)
       updateMessage(messageId, 'データの読み込みに失敗しました。リロードをお願いします。')
     }
-  }, [consultationId, saveMessageToDatabase, updateMessage])
+  }, [sessionId, saveMessageToDatabase, updateMessage, fetchChatSenntakusi])
 
+  // チャットを初期化する関数
   const initializeChat = useCallback(async () => {
-    if (!consultationId || initializationRef.current) return
+    if (!sessionId || initializationRef.current) return
 
     console.log('チャットを初期化中...')
     initializationRef.current = true
     setIsLoading(true)
 
     try {
-      console.log('相談データを取得中...')
-      const { data, error } = await supabase
-        .from('consultation_data')
-        .select('*')
-        .eq('consultation_id', consultationId)
+      console.log('チャットセッションデータを取得中...')
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('chat_sessions')
+        .select('*, initial_consultations(*)')
+        .eq('id', sessionId)
         .single()
 
-      if (error) throw error
+      if (sessionError) throw sessionError
 
-      if (data) {
-        console.log('相談データを取得しました:', data)
-        setThreadID(data.thread_id || null)
-
-        const questionnaireData = [
-          { question: data.question_1, answer: data.answer_1 },
-          { question: data.question_2, answer: data.answer_2 },
-          { question: data.question_3, answer: data.answer_3 },
-          { question: data.question_4, answer: data.answer_4 },
-          { question: data.question_5, answer: data.answer_5 },
-        ].filter(item => item.question && item.answer)
-
-        const questionnairePrompt = questionnaireData.map(item => 
-          `質問: ${item.question}\n回答: ${item.answer}`
-        ).join('\n\n')
-
-        addMessage(data.concern, 'user')
-        const loadingMessageId = addMessage('回答を準備中です...', 'ai')
-
-        const initialPrompt = `
-          ユーザーの質問票の回答:
-          ${questionnairePrompt}
-
-          ユーザーの相談内容:
-          ${data.concern}
-
-          上記の情報を踏まえて、システムプロンプトに則りユーザーの相談に回答してください。
-        `
-
-        console.log('streamResponseを呼び出し中...')
-        await streamResponse(initialPrompt, loadingMessageId, data.thread_id)
+      if (sessionData) {
+        console.log('チャットセッションデータを取得しました:', sessionData)
+        
+        // ①画面にお悩みを表示
+        if (sessionData.initial_consultations && sessionData.initial_consultations.consultation_text) {
+          addMessage(sessionData.initial_consultations.consultation_text, 'user', false)
+          
+          // ②お悩みをchat_messagesに保存
+          // 既にaddMessage関数で保存されていす
+          
+          // ③ユーザーの相談内容を元に回答用APIを実行
+          setIsLoading(true)
+          const aiMessageId = addMessage('回答を準備中です...', 'ai')
+          
+          const initialPrompt = `
+            ユーザーの相談内容:
+             ${sessionData.initial_consultations.consultation_text}
+            上記の情報を踏まえて、システムプロンプトに則りユーザーの相談に回答してください。
+          `
+          
+          console.log('streamResponseを呼び出し中...')
+          await streamResponse(initialPrompt, aiMessageId, sessionData.thread_id)
+        }
       }
     } catch (error) {
-      console.error('チャットの初期化中にエラーが発生しました:', error)
-      updateMessage('loading-message-id', 'データの取得に失敗しました。リロードをお願いします。')
+      console.error('チャットの初期化中にエラーが生しました:', error)
+      setError('データの取得に失敗しました。リロードをお願いします。')
     } finally {
       setIsLoading(false)
       setShowSurveyModal(true)
     }
-  }, [consultationId, addMessage, updateMessage, streamResponse])
+  }, [sessionId, addMessage, streamResponse])
 
-  useEffect(()=> {
+  // ログイン状態を確認する関数
+  const checkLoginStatus = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      setIsLoggedIn(!!session)
+    } catch (error) {
+      console.error('Failed to check login status:', error)
+      setIsLoggedIn(false)
+    }
+  }
+
+  // checkLoginStatusをuseCallbackでラップ
+  const memoizedCheckLoginStatus = useCallback(checkLoginStatus, [])
+
+  useEffect(() => {
     const initialize = async () => {
-      await checkLoginStatus();
-      if (consultationId && !initializationRef.current) {
+      await memoizedCheckLoginStatus();
+      if (sessionId && !initializationRef.current) {
         console.log('initializeChatを呼び出し中...')
         await initializeChat();
       }
     };
-  
+
     initialize();
-  }, [checkLoginStatus, initializeChat, consultationId]);
+  }, [memoizedCheckLoginStatus, initializeChat, sessionId]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as  Node)) {
-        setIsDropdownOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (isDropdownOpen && suggestionsRef.current) {
-      const scrollOptions: ScrollIntoViewOptions = {
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'start'
-      }
-      suggestionsRef.current.scrollIntoView(scrollOptions)
-    }
-  }, [isDropdownOpen])
-
-  const fetchChatSenntakusi = async (prompt: string) => {
-    try {
-      const response = await fetch(process.env.NEXT_PUBLIC_CHATSENNTAKUSI_URL!, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      if (data.status === 'OK' && data.result && data.result.content) {
-        setSuggestionContent(data.result.content)
-      } else {
-        console.error('予期しないレスポンス形式:', data)
-      }
-    } catch (error) {
-      console.error('チャット提案の取得中にエラーが発生しました:', error)
-    }
-  }
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (inputMessage.trim() === '' || isLoading) return
-  
-    addMessage(inputMessage, 'user', true)
-    setInputMessage('')
-    setIsLoading(true)
-  
-    const aiMessageId = addMessage('回答を準備中です...', 'ai')
-  
-    try {
-      await streamResponse(inputMessage, aiMessageId, threadID)
-    } catch (error) {
-      console.error('メッセージ送信中にエラーが発生しました:', error)
-      updateMessage(aiMessageId, 'エラーが発生しました。リロードをお願いします。')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
+  // 選択肢をクリックした際のハンドラー
   const handleSuggestionClick = (suggestion: string) => {
     setInputMessage(suggestion)
     setIsDropdownOpen(false)
@@ -433,84 +419,120 @@ export default function ChatInterface() {
     }
   }
 
-  const handleSurveySubmit = async (answer: string) => {
-    setShowSurveyModal(false)
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      const uid = user ? user.id : null
-
-      const { error } = await supabase
-        .from('survey_results')
-        .insert({
-          consultation_id: consultationId,
-          answer: answer,
-          uid: uid
-        })
-
-      if (error) throw error
-
-      if (answer === '凄く思う') {
-        setShowRegistrationModal(true)
-      }
-    } catch (error) {
-      console.error('アンケート結果の保存中にエラーが発生しました:', error)
-    }
-  }
-
-  const handleRegistrationSubmit = async (e: React.FormEvent) => {
+  // 回答用APIをストリーミングで表示保存する数
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    setRegistrationError(null)
+    if (inputMessage.trim() === '' || isLoading) return
 
-    if (password !== confirmPassword) {
-      setRegistrationError('パスワードが一致しません。')
-      return
-    }
+    // userMessageId を使用するか、完全に削除します
+    // const userMessageId = addMessage(inputMessage, 'user', true)
+    addMessage(inputMessage, 'user', true)
+    setInputMessage('')
+    setIsLoading(true)
+
+    const aiMessageId = addMessage('回答を準備中です...', 'ai')
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      })
-
-      if (authError) throw authError
-
-      if (authData.user) {
-        const uid = authData.user.id
-
-        const { error: chatError } = await supabase
-          .from('chat_messages')
-          .update({ uid: uid })
-          .eq('consultation_id', consultationId)
-
-        if (chatError) throw chatError
-
-        const { error: consultationError } = await supabase
-          .from('consultation_data')
-          .update({ uid: uid })
-          .eq('consultation_id', consultationId)
-
-        if (consultationError) throw consultationError
-
-        console.log('ユーザー登録とデータ更新が正常に完了しました:', authData.user)
-        setShowRegistrationModal(false)
-        setIsLoggedIn(true)
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-      }
-    } catch (error) {
-      console.error('登録またはデータ更新中にエラーが発生しました:', error)
-      setRegistrationError('登録中にエラーが発生しました。もう一度お試しください。')
+      await streamResponse(inputMessage, aiMessageId, threadID)
+    } catch (err) {
+      console.error('メッセージ送信中にエラーが発生しました:', err)
+      updateMessage(aiMessageId, 'エラーが発生しました。リロードをお願いします。')
+    } finally {
+      setIsLoading(false)
     }
   }
+
+  // ドロップダウンの位置を調整する関数を追加
+  const adjustDropdownPosition = useCallback(() => {
+    if (isDropdownOpen && dropdownRef.current && suggestionsRef.current) {
+      const dropdownRect = dropdownRef.current.getBoundingClientRect();
+      const suggestionsRect = suggestionsRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+
+      if (dropdownRect.bottom + suggestionsRect.height > viewportHeight) {
+        suggestionsRef.current.style.bottom = `${dropdownRect.height}px`;
+        suggestionsRef.current.style.top = 'auto';
+      } else {
+        suggestionsRef.current.style.top = `${dropdownRect.height}px`;
+        suggestionsRef.current.style.bottom = 'auto';
+      }
+    }
+  }, [isDropdownOpen]);
+
+  // useEffectを修正
+  useEffect(() => {
+    if (isDropdownOpen) {
+      adjustDropdownPosition();
+    }
+  }, [isDropdownOpen, adjustDropdownPosition]);
 
   const renderedMessages = useMemo(() => {
     return messages.map((message) => (
       <MessageComponent key={message.id} message={message} />
     ))
   }, [messages])
+
+  const handleRegistrationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (error) throw error;
+
+      if (data.user) {
+        const userId = data.user.id;
+
+        // chat_sessions, initial_consultations, survey_responsesのuser_idを更新
+        if (sessionId) {
+          const updates = [
+            supabase.from('chat_sessions').update({ user_id: userId }).eq('id', sessionId),
+            supabase.from('initial_consultations').update({ user_id: userId }).eq('chat_session_id', sessionId),
+            supabase.from('survey_responses').update({ user_id: userId }).eq('chat_session_id', sessionId),
+          ];
+
+          const results = await Promise.all(updates);
+          results.forEach((result, index) => {
+            if (result.error) {
+              console.error(`Error updating table ${index}:`, result.error);
+            }
+          });
+        }
+
+        setIsLoggedIn(true);
+        setShowRegistrationModal(false);
+      }
+    } catch (error) {
+      console.error('登録エラー:', error);
+      setRegistrationError('登録に失敗しました。もう一度お試しください。');
+    }
+  };
+
+  const handleSurveySubmit = async (option: string) => {
+    try {
+      console.log('選択されたオプション:', option);
+      setShowSurveyModal(false);
+
+      if (option === '凄く思う') {
+        setShowRegistrationModal(true);
+      }
+
+      // サーベイ回答をデータベースに保存
+      if (sessionId) {
+        const { error } = await supabase
+          .from('survey_responses')
+          .insert({
+            chat_session_id: sessionId,
+            response: option,
+          });
+
+        if (error) throw error;
+      }
+    } catch (error) {
+      console.error('サーベイの送信中にエラーが発生しました:', error);
+    }
+  };
 
   return (
     <>
@@ -594,7 +616,7 @@ export default function ChatInterface() {
         <header className="bg-white shadow-sm py-4 px-6 flex items-center justify-between">
           <div className="flex items-center">
             <Image
-              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/aicon100.png`}
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/sign/Healthle/aicon100_1010.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJIZWFsdGhsZS9haWNvbjEwMF8xMDEwLnBuZyIsImlhdCI6MTcyODU0NDIzNCwiZXhwIjoxODg2MjI0MjM0fQ.aYcgNRWaEdTPwxcvTOjMZgnAmYrLx6VafwQ_uHuvx0w&t=2024-10-10T07%3A10%3A35.946Z`}
               alt="Healthleロゴ"
               width={40}
               height={40}
@@ -602,7 +624,7 @@ export default function ChatInterface() {
             />
             <div>
               <h1 className="text-2xl font-semibold text-[#002341]">Healthle</h1>
-              <p className="text-sm text-gray-500">ヘルスル</p>
+              <p className="text-sm text-gray-500">へルスル</p>
             </div>
           </div>
           <Link
@@ -618,32 +640,33 @@ export default function ChatInterface() {
             {renderedMessages}
           </div>
         </div>
-        <div className={`bg-white border-t border-gray-200 p-4`}>
-        <div className="max-w-3xl mx-auto">
-          <div className="mb-3">
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full bg-[#E6EDF2] text-[#002341] px-4 py-2 rounded-lg text-sm hover:bg-[#D1E0ED] transition-colors flex justify-between items-center"
-              aria-expanded={isDropdownOpen}
-              aria-haspopup="true"
-            >
-              <span>質問の候補</span>
-              {isDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-            {isDropdownOpen && suggestionContent && (
-              <div 
-                className="mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
-                role="menu"
-                aria-orientation="vertical"
-                aria-labelledby="options-menu"
+        <div className={`bg-white border-t border-gray-200 p-4 ${isDropdownOpen ? 'mb-4' : ''}`}>
+          <div className="max-w-3xl mx-auto">
+            <div className="relative mb-3" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full bg-[#F0F0F0] text-[#002341] px-4 py-2 rounded-lg text-sm hover:bg-[#E6E6E6] transition-colors flex justify-between items-center"
+                aria-expanded={isDropdownOpen}
+                aria-haspopup="true"
               >
-                {Object.values(suggestionContent).map((suggestion, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="block w-full text-left px-4 py-2 text-sm text-[#002341] hover:bg-[#E6EDF2] transition-colors border-b border-gray-200 last:border-b-0"
-                    role="menuitem"
-                  >
+                <span>質問の候補</span>
+                {isDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+              {isDropdownOpen && suggestionContent && (
+                <div 
+                  ref={suggestionsRef}
+                  className="absolute z-10 w-full bg-[#F8F8F8] border border-gray-200 rounded-lg shadow-lg"
+                  role="menu"
+                  aria-orientation="vertical"
+                  aria-labelledby="options-menu"
+                >
+                  {Object.values(suggestionContent).map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="block w-full text-left px-4 py-2 text-sm text-[#002341] hover:bg-[#E6E6E6] transition-colors"
+                      role="menuitem"
+                    >
                       {suggestion}
                     </button>
                   ))}
@@ -655,7 +678,7 @@ export default function ChatInterface() {
                 <textarea
                   ref={textareaRef}
                   value={inputMessage}
-                  onChange={handleTextareaChange}
+                  onChange={(e) => setInputMessage(e.target.value)}
                   placeholder="気になることはありますか？"
                   className="w-full p-4 pr-12 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#002341] resize-none overflow-hidden"
                   disabled={isLoading}
@@ -689,7 +712,7 @@ export default function ChatInterface() {
                 <button
                   key={option}
                   onClick={() => handleSurveySubmit(option)}
-                  className="w-full p-2 text-left bg-[#E6EDF2] hover:bg-[#D1E0ED] rounded-lg transition-colors"
+                  className="block w-full text-left px-4 py-2 text-sm text-[#002341] bg-[#E6EDF2] hover:bg-[#D1E0ED] rounded-lg transition-colors"
                 >
                   {option}
                 </button>
@@ -703,7 +726,7 @@ export default function ChatInterface() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">アカウント登録</h2>
+              <h2 className="text-xl font-semibold">アウント登録</h2>
               <button
                 onClick={() => setShowRegistrationModal(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -774,6 +797,7 @@ export default function ChatInterface() {
         </div>
       )}
       <HealthDisclaimerModal />
+      {error && <p className="text-red-500">{error}</p>}
     </>
   )
 }

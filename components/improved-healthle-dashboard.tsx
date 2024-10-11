@@ -6,7 +6,6 @@ import { X, Menu, History, AlertCircle, LightbulbIcon, CheckCircle } from 'lucid
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { v4 as uuidv4 } from 'uuid'
 import Head from 'next/head'
 
 const supabase: SupabaseClient = createClient(
@@ -55,7 +54,7 @@ const InputGuidelines = () => (
   </div>
 )
 
-export function ImprovedHealthleDashboardComponent() {
+export default function ImprovedHealthleDashboardComponent() {
   const defaultText = `こちらにお困りの症状や悩みを具体的にご記入ください。`
 
   const [consultationText, setConsultationText] = useState('')
@@ -194,7 +193,6 @@ export function ImprovedHealthleDashboardComponent() {
   }, [consultationText, debounceFetchSuggestions])
 
   useEffect(() => {
-    // Prevent zoom on input focus for iOS devices
     const preventDefault = (e: Event) => e.preventDefault()
     document.addEventListener('gesturestart', preventDefault)
     document.addEventListener('gesturechange', preventDefault)
@@ -209,15 +207,30 @@ export function ImprovedHealthleDashboardComponent() {
 
   const fetchConsultationExamples = async () => {
     try {
+      const { count, error: countError } = await supabase
+        .from('consultation_examples')
+        .select('*', { count: 'exact', head: true })
+
+      if (countError) throw countError
+
+      if (count === null) {
+        console.error('Failed to get the count of consultation examples')
+        return
+      }
+
+      const numExamplesToFetch = 5
+      const randomOffset = Math.floor(Math.random() * (count - numExamplesToFetch + 1))
+
       const { data, error } = await supabase
         .from('consultation_examples')
         .select('*')
+        .range(randomOffset, randomOffset + numExamplesToFetch - 1)
       
       if (error) throw error
 
-      setConsultationExamples(data)
+      setConsultationExamples(data as ConsultationExample[])
     } catch (error) {
-      console.error('相談例の取得に失敗しました:', error)
+      console.error('相談例���に失敗しました:', error)
     }
   }
 
@@ -315,41 +328,53 @@ export function ImprovedHealthleDashboardComponent() {
 
     try {
       console.log('相談開始処理を開始します')
-      
-      const consultationId = uuidv4()
 
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
-      if (userError) {
-        console.error('ユーザー情報の取得に失敗しました:', userError)
-      }
+      const { data: { user } } = await supabase.auth.getUser()
+      const userId = user ? user.id : null
 
-      const insertData: { consultation_id: string; concern: string; uid?: string } = {
-        consultation_id: consultationId,
-        concern: consultationText,
-      }
+      console.log('ユーザーID:', userId)
 
-      if (user) {
-        insertData.uid = user.id
-      }
-
-      const { data: consultationData, error: consultationError } = await supabase
-        .from('consultation_data')
-        .insert(insertData)
+      const { data: initialConsultationData, error: initialConsultationError } = await supabase
+        .from('initial_consultations')
+        .insert({ 
+          user_id: userId,  // userId が null の場合、これは自動的に NULL として扱われます
+          consultation_text: consultationText 
+        })
         .select()
 
-      if (consultationError) {
-        console.error('consultation_dataへの挿入エラー:', consultationError)
-        throw consultationError
+      if (initialConsultationError) {
+        console.error('initial_consultationsへの挿入エラー:', initialConsultationError)
+        throw initialConsultationError
       }
 
-      if (!consultationData || consultationData.length === 0) {
+      if (!initialConsultationData || initialConsultationData.length === 0) {
         throw new Error('挿入からデータが返されませんでした')
       }
 
-      console.log('生成されたconsultation_id:', consultationId)
+      const initialConsultationId = initialConsultationData[0].id
 
-      router.push(`/chat?id=${consultationId}`)
+      const { data: chatSessionData, error: chatSessionError } = await supabase
+        .from('chat_sessions')
+        .insert({ 
+          initial_consultation_id: initialConsultationId,
+          user_id: userId  // userId が null の場合、これは自動的に NULL として扱われます
+        })
+        .select()
+
+      if (chatSessionError) {
+        console.error('chat_sessionsへの挿入エラー:', chatSessionError)
+        throw chatSessionError
+      }
+
+      if (!chatSessionData || chatSessionData.length === 0) {
+        throw new Error('chat_sessionsの挿入からデータが返されませんでした')
+      }
+
+      const chatSessionId = chatSessionData[0].id
+
+      console.log('生成されたchat_session_id:', chatSessionId)
+
+      router.push(`/chat?session_id=${chatSessionId}`)
     } catch (error) {
       console.error('相談の開始に失敗しました:', error)
       setError('相談の開始に失敗しました。もう一度お試しください。')
@@ -370,7 +395,7 @@ export function ImprovedHealthleDashboardComponent() {
   const MissingElementsAlert = () => {
     if (!elementCheckResult) return null
 
-    const missingElements = []
+    const  missingElements = []
     if (!elementCheckResult.symptomStart) missingElements.push('症状の開始時期')
     if (!elementCheckResult.symptomFrequency) missingElements.push('症状の頻度')
     if (!elementCheckResult.symptomSeverity) missingElements.push('症状の程度')
@@ -398,12 +423,12 @@ export function ImprovedHealthleDashboardComponent() {
   if (error) {
     return (
       <div className="min-h-screen bg-white text-gray-800 font-sans flex items-center justify-center">
-        <div  className="text-center">
+        <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">エラーが発生しました</h1>
           <p>{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
+            className="mt-4 px-4 py-2  bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
           >
             再読み込み
           </button>
@@ -432,7 +457,7 @@ export function ImprovedHealthleDashboardComponent() {
               <header className="flex justify-between items-center mb-6">
                 <div className="flex items-center">
                   <Image 
-                    src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle_image/aicon100.png`} 
+                    src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/sign/Healthle/aicon100_1010.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJIZWFsdGhsZS9haWNvbjEwMF8xMDEwLnBuZyIsImlhdCI6MTcyODU0NDIzNCwiZXhwIjoxODg2MjI0MjM0fQ.aYcgNRWaEdTPwxcvTOjMZgnAmYrLx6VafwQ_uHuvx0w&t=2024-10-10T07%3A10%3A35.946Z`} 
                     alt="Healthle Logo" 
                     width={32} 
                     height={32} 
