@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import PastConsultations from '@/components/past-consultations'
 
 export const metadata: Metadata = {
-  title: '過去の相談履歴 | ヘルスル（Healthle）',
+  title: 'ヘルスル（Healthle）',
   description: 'ヘルスル（Healthle）の過去の相談履歴ページです。これまでの健康相談や睡眠改善のアドバイスを確認できます。',
   openGraph: {
-    title: '過去の相談履歴 | ヘルスル（Healthle）',
+    title: 'ヘルスル（Healthle）',
     description: 'ヘルスル（Healthle）の過去の相談履歴ページです。これまでの健康相談や睡眠改善のアドバイスを確認できます。',
     images: [
       {

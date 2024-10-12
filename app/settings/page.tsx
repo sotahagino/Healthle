@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import SettingsPage from '@/components/settings'
 
 export const metadata: Metadata = {
-  title: '設定 | ヘルスル（Healthle）',
+  title: 'ヘルスル（Healthle）',
   description: 'ヘルスル（Healthle）の設定ページです。アカウント情報の管理や通知設定、プライバシー設定などをカスタマイズできます。',
   openGraph: {
-    title: '設定 | ヘルスル（Healthle）',
+    title: 'ヘルスル（Healthle）',
     description: 'ヘルスル（Healthle）の設定ページです。アカウント情報の管理や通知設定、プライバシー設定などをカスタマイズできます。',
     images: [
       {

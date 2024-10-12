@@ -15,7 +15,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "ホーム | ヘルスル（Healthle）",
+  title: "ヘルスル（Healthle）",
   description: "「ヘルスル (Healthle)」は、健康相談と睡眠改善に特化した無料サービスです。簡単なタップ操作で、自分に合った情報やアドバイスを素早く得られ、健康をサポートします。",
   openGraph: {
     title: '「ヘルスル(Healthle)」 健康相談・睡眠改善を24時間いつでも無料で',

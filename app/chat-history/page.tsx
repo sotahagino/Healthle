@@ -2,10 +2,10 @@ import dynamic from 'next/dynamic'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'チャット履歴 | ヘルスル（Healthle）',
+  title: 'ヘルスル（Healthle）',
   description: 'ヘルスル（Healthle）のチャット履歴ページです。過去の健康相談や睡眠改善のアドバイスを確認できます。',
   openGraph: {
-    title: 'チャット履歴 | ヘルスル（Healthle）',
+    title: 'ヘルスル（Healthle）',
     description: 'ヘルスル（Healthle）のチャット履歴ページです。過去の健康相談や睡眠改善のアドバイスを確認できます。',
     images: [
       {
