@@ -425,7 +425,7 @@ export default function ImprovedHealthleDashboardComponent() {
           <p className="mb-6 text-gray-600">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="px-6 py-2 bg-[#2C4179] text-white rounded-md hover:bg-[#1E2F5C] transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2"
           >
             再読み込み
           </button>
@@ -447,7 +447,7 @@ export default function ImprovedHealthleDashboardComponent() {
             transition={{ duration: 0.5 }}
             className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col"
           >
-            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white text-center py-3 px-4 text-sm font-semibold shadow-md">
+            <div className="bg-gradient-to-r from-[#2C4179] to-[#1E2F5C] text-white text-center py-3 px-4 text-sm font-semibold shadow-md">
               24時間対応 | 即時回答 | 完全無料
             </div>
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow overflow-y-auto flex flex-col w-full">
@@ -460,28 +460,28 @@ export default function ImprovedHealthleDashboardComponent() {
                     height={40} 
                     className="rounded-full shadow-sm"
                   />
-                  <h1 className="text-2xl font-bold text-blue-800 ml-3">Healthle <span className="text-xs font-normal text-gray-500">ヘルスル</span></h1>
+                  <h1 className="text-2xl font-bold text-[#2C4179] ml-3">Healthle <span className="text-xs font-normal text-gray-500">ヘルスル</span></h1>
                 </div>
                 <div className="flex space-x-3">
                   <button
-                    className="p-2 rounded-full bg-white shadow-sm hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="p-2 rounded-full bg-white shadow-sm hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2"
                     aria-label="過去の相談"
                     onClick={handleViewPastConsultations}
                   >
-                    <History className="w-6 h-6 text-blue-600" />
+                    <History className="w-6 h-6 text-[#2C4179]" />
                   </button>
                   <button
-                    className="p-2 rounded-full bg-white shadow-sm hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="p-2 rounded-full bg-white shadow-sm hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2"
                     aria-label="設定"
                     onClick={handleMenuClick}
                   >
-                    <Menu className="w-6 h-6 text-blue-600" />
+                    <Menu className="w-6 h-6 text-[#2C4179]" />
                   </button>
                 </div>
               </header>
 
               <main className="flex-grow overflow-y-auto flex flex-col pb-24">
-                <h2 className="text-xl font-semibold mb-4 text-blue-800">相談内容</h2>
+                <h2 className="text-xl font-semibold mb-4 text-[#2C4179]">相談内容</h2>
                 <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
                   <div className="border-2 border-gray-200 rounded-lg p-3 bg-white relative">
                     <label htmlFor="consultationInput" className="sr-only">相談内容を入力</label>
@@ -512,15 +512,15 @@ export default function ImprovedHealthleDashboardComponent() {
                       </button>
                     )}
                     {suggestion && (
-                      <div className="mt-2 bg-blue-50 border-t border-blue-200 p-2">
+                      <div className="mt-2 bg-[#E6EAF5] border-t border-[#2C4179] p-2">
                         <div className="flex items-start mb-2">
-                          <LightbulbIcon className="w-4 h-4 text-blue-500 mr-2 mt-1 flex-shrink-0" />
-                          <p className="text-xs text-blue-600 flex-grow">{suggestion}</p>
+                          <LightbulbIcon className="w-4 h-4 text-[#2C4179] mr-2 mt-1 flex-shrink-0" />
+                          <p className="text-xs text-[#2C4179] flex-grow">{suggestion}</p>
                         </div>
                         <div className="flex justify-end space-x-2">
                           <button
                             onClick={handleSuggestionAccept}
-                            className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            className="px-2 py-1 bg-[#2C4179] text-white text-xs rounded hover:bg-[#1E2F5C] focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2"
                           >
                             追加
                           </button>
@@ -551,8 +551,9 @@ export default function ImprovedHealthleDashboardComponent() {
                         >
                           <button
                             onClick={() => handleExampleClick(consultationExamples[currentExampleIndex].content)}
-                            className="w-full text-left hover:bg-blue-50 focus:outline-none focus:bg-blue-50 transition-colors rounded-md p-3"
+                            className="w-full text-left hover:bg-[#E6EAF5] focus:outline-none focus:bg-[#E6EAF5] transition-colors rounded-md p-3"
                           >
+                            
                             {consultationExamples[currentExampleIndex].content}
                           </button>
                         </motion.div>
@@ -569,14 +570,14 @@ export default function ImprovedHealthleDashboardComponent() {
                 <p className="text-center text-xs text-gray-600 mb-3">
                   <button
                     onClick={() => fetchLegalDocument('terms_of_service')}
-                    className="text-blue-600 hover:underline mr-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+                    className="text-[#2C4179] hover:underline mr-1 focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2 rounded"
                   >
                     利用規約
                   </button>
                   と
                   <button
                     onClick={() => fetchLegalDocument('privacy_policy')}
-                    className="text-blue-600 hover:underline ml-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+                    className="text-[#2C4179] hover:underline ml-1 focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2 rounded"
                   >
                     プライバシーポリシー
                   </button>
@@ -587,7 +588,7 @@ export default function ImprovedHealthleDashboardComponent() {
                     type="submit"
                     className={`w-full rounded-lg py-4 font-semibold text-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                       consultationText && !isLoading
-                        ? 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-md'
+                        ? 'bg-[#2C4179] text-white hover:bg-[#1E2F5C] focus:ring-[#2C4179] shadow-md'
                         : 'bg-gray-200 text-gray-500 cursor-not-allowed focus:ring-gray-400'
                     }`}
                     disabled={!consultationText || isLoading}
@@ -603,7 +604,7 @@ export default function ImprovedHealthleDashboardComponent() {
                 <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold text-gray-800">{modalTitle}</h2>
-                    <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded">
+                    <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#2C4179] rounded">
                       <X className="w-6 h-6" />
                     </button>
                   </div>

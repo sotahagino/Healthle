@@ -31,13 +31,13 @@ interface SuggestionContent {
 }
 
 const MessageComponent = React.memo(({ message }: { message: Message }) => (
-  <div className={`my-4 p-4 rounded-lg shadow-md ${message.sender === 'user' ? 'bg-blue-50' : 'bg-white'}`}>
+  <div className={`my-4 p-4 rounded-lg shadow-md ${message.sender === 'user' ? 'bg-[#E6EAF5]' : 'bg-white'}`}>
     <div className="flex items-center mb-2">
       {message.sender === 'user' ? (
         message.isQuestion ? (
-          <HelpCircle className="w-6 h-6 mr-2 text-blue-600" />
+          <HelpCircle className="w-6 h-6 mr-2 text-[#2C4179]" />
         ) : (
-          <User className="w-6 h-6 mr-2 text-blue-600" />
+          <User className="w-6 h-6 mr-2 text-[#2C4179]" />
         )
       ) : (
         <Image
@@ -48,7 +48,7 @@ const MessageComponent = React.memo(({ message }: { message: Message }) => (
           className="mr-2"
         />
       )}
-      <p className="text-lg font-semibold text-blue-800">
+      <p className="text-lg font-semibold text-[#2C4179]">
         {message.sender === 'user'
           ? message.isQuestion
             ? '質問'
@@ -61,12 +61,12 @@ const MessageComponent = React.memo(({ message }: { message: Message }) => (
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeRaw]}
       components={{
-        h1: ({ ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4 text-blue-800" {...props} />,
-        h2: ({ ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3 text-blue-800" {...props} />,
-        h3: ({ ...props }) => <h3 className="text-lg font-medium mt-4 mb-2 text-blue-800" {...props} />,
-        h4: ({ ...props }) => <h4 className="text-base font-medium mt-3 mb-2 text-blue-800" {...props} />,
-        h5: ({ ...props }) => <h5 className="text-sm font-medium mt-2 mb-1 text-blue-800" {...props} />,
-        h6: ({ ...props }) => <h6 className="text-xs font-medium mt-2 mb-1 text-blue-800" {...props} />,
+        h1: ({ ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4 text-[#2C4179]" {...props} />,
+        h2: ({ ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3 text-[#2C4179]" {...props} />,
+        h3: ({ ...props }) => <h3 className="text-lg font-medium mt-4 mb-2 text-[#2C4179]" {...props} />,
+        h4: ({ ...props }) => <h4 className="text-base font-medium mt-3 mb-2 text-[#2C4179]" {...props} />,
+        h5: ({ ...props }) => <h5 className="text-sm font-medium mt-2 mb-1 text-[#2C4179]" {...props} />,
+        h6: ({ ...props }) => <h6 className="text-xs font-medium mt-2 mb-1 text-[#2C4179]" {...props} />,
         p: ({ ...props }) => <p className="my-2 leading-relaxed text-gray-700" {...props} />,
         ul: ({ ...props }) => <ul className="list-disc pl-6 my-2 space-y-1 text-gray-700" {...props} />,
         ol: ({ ...props }) => <ol className="list-decimal pl-6 my-2 space-y-1 text-gray-700" {...props} />,
@@ -76,13 +76,13 @@ const MessageComponent = React.memo(({ message }: { message: Message }) => (
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
+            className="text-[#2C4179] hover:underline"
           >
             {children}
           </a>
         ),
         blockquote: ({ ...props }) => (
-          <blockquote className="border-l-4 border-blue-300 pl-4 italic my-2 text-gray-600" {...props} />
+          <blockquote className="border-l-4 border-[#2C4179] pl-4 italic my-2 text-gray-600" {...props} />
         ),
         code: ({ className, children, ...props }) => {
           const match = /language-(\w+)/.exec(className || '')
@@ -355,6 +355,7 @@ export default function ChatHistory({ threadId = null }: { threadId?: string | n
         suggestionsRef.current.style.bottom = `${dropdownRect.height}px`;
         suggestionsRef.current.style.top = 'auto';
       } else {
+        
         suggestionsRef.current.style.top = `${dropdownRect.height}px`;
         suggestionsRef.current.style.bottom = 'auto';
       }
@@ -386,7 +387,7 @@ export default function ChatHistory({ threadId = null }: { threadId?: string | n
           margin-bottom: 0.5em;
           line-height: 1.2;
           font-weight: 600;
-          color: #1e40af;
+          color: #2C4179;
         }
         .markdown-content h1 {
           font-size: 1.5em;
@@ -423,17 +424,17 @@ export default function ChatHistory({ threadId = null }: { threadId?: string | n
         }
         .markdown-content strong {
           font-weight: 600;
-          color: #1e40af;
+          color: #2C4179;
         }
         .markdown-content a {
-          color: #2563eb;
+          color: #2C4179;
           text-decoration: none;
         }
         .markdown-content a:hover {
           text-decoration: underline;
         }
         .markdown-content blockquote {
-          border-left: 4px solid #93c5fd;
+          border-left: 4px solid #2C4179;
           padding-left: 1em;
           color: #4b5563;
           font-style: italic;
@@ -462,11 +463,11 @@ export default function ChatHistory({ threadId = null }: { threadId?: string | n
               className="mr-3"
             />
             <div>
-              <h1 className="text-2xl font-bold text-blue-800">Healthle</h1>
+              <h1 className="text-2xl font-bold text-[#2C4179]">Healthle</h1>
               <p className="text-sm text-gray-500">ヘルスル</p>
             </div>
           </div>
-          <Link href="/" className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors">
+          <Link href="/" className="bg-[#2C4179] text-white p-2 rounded-full hover:bg-[#1E2F5C] transition-colors">
             <Home className="w-5 h-5" />
             <span className="sr-only">ホームに戻る</span>
           </Link>
@@ -486,7 +487,7 @@ export default function ChatHistory({ threadId = null }: { threadId?: string | n
             <div className="relative mb-3" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full bg-gray-100 text-blue-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors flex justify-between items-center"
+                className="w-full bg-gray-100 text-[#2C4179] px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors flex justify-between items-center"
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="true"
               >
@@ -501,12 +502,11 @@ export default function ChatHistory({ threadId = null }: { threadId?: string | n
                   aria-orientation="vertical"
                   aria-labelledby="options-menu"
                 >
-                  
                   {Object.values(suggestionContent).map((suggestion, index) => (
                     <button
                       key={index}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="block w-full text-left px-4 py-2 text-sm text-blue-800 hover:bg-gray-100 transition-colors"
+                      className="block w-full text-left px-4 py-2 text-sm text-[#2C4179] hover:bg-gray-100 transition-colors"
                       role="menuitem"
                     >
                       {suggestion}
@@ -522,14 +522,14 @@ export default function ChatHistory({ threadId = null }: { threadId?: string | n
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   placeholder="気になることはありますか？"
-                  className="w-full p-4 pr-14 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none overflow-hidden"
+                  className="w-full p-4 pr-14 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C4179] resize-none overflow-hidden"
                   disabled={isLoading}
                   rows={1}
                   style={{ minHeight: '2.5rem', paddingRight: '3rem' }}
                 />
                 <button
                   type="submit"
-                  className={`absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors flex items-center justify-center ${
+                  className={`absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#2C4179] text-white p-2 rounded-full hover:bg-[#1E2F5C] transition-colors flex items-center justify-center ${
                     isLoading ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                   aria-label="送信"

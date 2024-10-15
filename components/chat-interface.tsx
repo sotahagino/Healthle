@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Send, HelpCircle, User, Home, ChevronDown, ChevronUp, X } from 'lucide-react'
 import Image from 'next/image'
@@ -33,13 +33,13 @@ interface SuggestionContent {
 
 function MessageComponentBase({ message }: { message: Message }) {
   return (
-    <div className={`my-4 p-4 rounded-lg shadow-md ${message.sender === 'user' ? 'bg-blue-50' : 'bg-white'}`}>
+    <div className={`my-4 p-4 rounded-lg shadow-md ${message.sender === 'user' ? 'bg-[#E6EAF5]' : 'bg-white'}`}>
       <div className="flex items-center mb-2">
         {message.sender === 'user' ? (
           message.isQuestion ? (
-            <HelpCircle className="w-6 h-6 mr-2 text-blue-600" />
+            <HelpCircle className="w-6 h-6 mr-2 text-[#2C4179]" />
           ) : (
-            <User className="w-6 h-6 mr-2 text-blue-600" />
+            <User className="w-6 h-6 mr-2 text-[#2C4179]" />
           )
         ) : (
           <Image
@@ -50,7 +50,7 @@ function MessageComponentBase({ message }: { message: Message }) {
             className="mr-2"
           />
         )}
-        <p className="text-lg font-semibold text-blue-800">
+        <p className="text-lg font-semibold text-[#2C4179]">
           {message.sender === 'user'
             ? message.isQuestion
               ? '質問'
@@ -63,12 +63,12 @@ function MessageComponentBase({ message }: { message: Message }) {
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw]}
         components={{
-          h1: ({ ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4 text-blue-800" {...props} />,
-          h2: ({ ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3 text-blue-800" {...props} />,
-          h3: ({ ...props }) => <h3 className="text-lg font-medium mt-4 mb-2 text-blue-800" {...props} />,
-          h4: ({ ...props }) => <h4 className="text-base font-medium mt-3 mb-2 text-blue-800" {...props} />,
-          h5: ({ ...props }) => <h5 className="text-sm font-medium mt-2 mb-1 text-blue-800" {...props} />,
-          h6: ({ ...props }) => <h6 className="text-xs font-medium mt-2 mb-1 text-blue-800" {...props} />,
+          h1: ({ ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4 text-[#2C4179]" {...props} />,
+          h2: ({ ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3 text-[#2C4179]" {...props} />,
+          h3: ({ ...props }) => <h3 className="text-lg font-medium mt-4 mb-2 text-[#2C4179]" {...props} />,
+          h4: ({ ...props }) => <h4 className="text-base font-medium mt-3 mb-2 text-[#2C4179]" {...props} />,
+          h5: ({ ...props }) => <h5 className="text-sm font-medium mt-2 mb-1 text-[#2C4179]" {...props} />,
+          h6: ({ ...props }) => <h6 className="text-xs font-medium mt-2 mb-1 text-[#2C4179]" {...props} />,
           p: ({ ...props }) => <p className="my-2 leading-relaxed text-gray-700" {...props} />,
           ul: ({ ...props }) => <ul className="list-disc pl-6 my-2 space-y-1 text-gray-700" {...props} />,
           ol: ({ ...props }) => <ol className="list-decimal pl-6 my-2 space-y-1 text-gray-700" {...props} />,
@@ -78,13 +78,13 @@ function MessageComponentBase({ message }: { message: Message }) {
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
+              className="text-[#2C4179] hover:underline"
             >
               {children}
             </a>
           ),
           blockquote: ({ ...props }) => (
-            <blockquote className="border-l-4 border-blue-300 pl-4 italic my-2 text-gray-600" {...props} />
+            <blockquote className="border-l-4 border-[#2C4179] pl-4 italic my-2 text-gray-600" {...props} />
           ),
           code: ({ className, children, ...props }) => {
             const match = /language-(\w+)/.exec(className || '')
@@ -140,39 +140,37 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const [threadID, setThreadID] = useState<string | null>(threadId || null)
   const initializationRef = useRef(false)
-  const [textareaHeight, setTextareaHeight] = useState('auto')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const chatStyles = {
     container: "flex flex-col h-screen bg-gray-50",
     header: "bg-white shadow-md py-4 px-6 flex items-center justify-between",
     logo: "flex items-center",
-    title: "text-2xl font-bold text-blue-800",
+    title: "text-2xl font-bold text-[#2C4179]",
     subtitle: "text-sm text-gray-500",
-    homeButton: "bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors",
+    homeButton: "bg-[#2C4179] text-white p-2 rounded-full hover:bg-[#1E2F5C] transition-colors",
     chatArea: "flex-1 overflow-y-auto p-6",
     inputArea: "bg-white border-t border-gray-200 p-4",
     inputContainer: "max-w-3xl mx-auto",
-    dropdownButton: "w-full bg-gray-100 text-blue-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors flex justify-between items-center mb-3",
+    dropdownButton: "w-full bg-gray-100 text-[#2C4179] px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors flex justify-between items-center mb-3",
     suggestionList: "absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg",
-    suggestionItem: "block w-full text-left px-4 py-2 text-sm text-blue-800 hover:bg-gray-100 transition-colors",
-    textarea: "w-full p-3 pr-14 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none overflow-hidden",
-    sendButton: "absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors flex items-center justify-center",
+    suggestionItem: "block w-full text-left px-4 py-2 text-sm text-[#2C4179] hover:bg-gray-100 transition-colors",
+    textarea: "w-full p-3 pr-14 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C4179] resize-none overflow-hidden",
+    sendButton: "absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#2C4179] text-white p-2 rounded-full hover:bg-[#1E2F5C] transition-colors flex items-center justify-center",
   }
 
   // Modal styles
   const modalStyles = {
     overlay: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4",
     container: "bg-white rounded-lg p-6 max-w-md w-full",
-    title: "text-xl font-semibold mb-4 text-blue-800",
+    title: "text-xl font-semibold mb-4 text-[#2C4179]",
     text: "mb-4 text-gray-700",
-    button: "block w-full text-left px-4 py-2 text-sm text-blue-800 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors",
-    input: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
-    submitButton: "w-full p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors",
+    button: "block w-full text-left px-4 py-2 text-sm text-[#2C4179] bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors",
+    input: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#2C4179] focus:border-[#2C4179]",
+    submitButton: "w-full p-2 bg-[#2C4179] text-white rounded-lg hover:bg-[#1E2F5C] transition-colors",
     cancelButton: "w-full p-2 mt-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors",
   }
 
-  
   // メッセージをデータベースに保存する関数
   const saveMessageToDatabase = useCallback(async (message: Message) => {
     if (!sessionId) {
@@ -294,7 +292,9 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
         if (sessionId) {
           const { error } = await supabase
             .from('chat_sessions')
-            .update({ thread_id: newThreadId })
+            .update({ 
+              thread_id: newThreadId
+            })
             .eq('id', sessionId)
           
           if (error) {
@@ -466,8 +466,6 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
     e.preventDefault()
     if (inputMessage.trim() === '' || isLoading) return
 
-    // userMessageId を使用するか、完全に削除します
-    // const userMessageId = addMessage(inputMessage, 'user', true)
     addMessage(inputMessage, 'user', true)
     setInputMessage('')
     setIsLoading(true)
@@ -507,12 +505,6 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
       adjustDropdownPosition();
     }
   }, [isDropdownOpen, adjustDropdownPosition]);
-
-  const renderedMessages = useMemo(() => {
-    return messages.map((message) => (
-      <MessageComponent key={message.id} message={message} />
-    ))
-  }, [messages])
 
   const handleRegistrationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -589,7 +581,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
           margin-bottom: 0.5em;
           line-height: 1.2;
           font-weight: 600;
-          color: #1e40af;
+          color: #2C4179;
         }
         .markdown-content h1 {
           font-size: 1.5em;
@@ -626,17 +618,17 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
         }
         .markdown-content strong {
           font-weight: 600;
-          color: #1e40af;
+          color: #2C4179;
         }
         .markdown-content a {
-          color: #2563eb;
+          color: #2C4179;
           text-decoration: none;
         }
         .markdown-content a:hover {
           text-decoration: underline;
         }
         .markdown-content blockquote {
-          border-left: 4px solid #93c5fd;
+          border-left: 4px solid #2C4179;
           padding-left: 1em;
           color: #4b5563;
           font-style: italic;
@@ -678,6 +670,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
         <div className={chatStyles.chatArea}>
           <div className="max-w-3xl mx-auto space-y-4">
             {messages.map((message) => (
+              
               <MessageComponent key={message.id} message={message} />
             ))}
           </div>
