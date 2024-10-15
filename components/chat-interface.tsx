@@ -33,13 +33,13 @@ interface SuggestionContent {
 
 function MessageComponentBase({ message }: { message: Message }) {
   return (
-    <div className="my-4 p-4 bg-white rounded-lg shadow">
+    <div className={`my-4 p-4 rounded-lg shadow-md ${message.sender === 'user' ? 'bg-blue-50' : 'bg-white'}`}>
       <div className="flex items-center mb-2">
         {message.sender === 'user' ? (
           message.isQuestion ? (
-            <HelpCircle className="w-6 h-6 mr-2 text-[#002341]" />
+            <HelpCircle className="w-6 h-6 mr-2 text-blue-600" />
           ) : (
-            <User className="w-6 h-6 mr-2 text-[#002341]" />
+            <User className="w-6 h-6 mr-2 text-blue-600" />
           )
         ) : (
           <Image
@@ -50,7 +50,7 @@ function MessageComponentBase({ message }: { message: Message }) {
             className="mr-2"
           />
         )}
-        <p className="text-lg font-semibold text-[#002341]">
+        <p className="text-lg font-semibold text-blue-800">
           {message.sender === 'user'
             ? message.isQuestion
               ? '質問'
@@ -63,28 +63,28 @@ function MessageComponentBase({ message }: { message: Message }) {
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw]}
         components={{
-          h1: ({ ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
-          h2: ({ ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
-          h3: ({ ...props }) => <h3 className="text-lg font-medium mt-4 mb-2" {...props} />,
-          h4: ({ ...props }) => <h4 className="text-base font-medium mt-3 mb-2" {...props} />,
-          h5: ({ ...props }) => <h5 className="text-sm font-medium mt-2 mb-1" {...props} />,
-          h6: ({ ...props }) => <h6 className="text-xs font-medium mt-2 mb-1" {...props} />,
-          p: ({ ...props }) => <p className="my-2 leading-relaxed" {...props} />,
-          ul: ({ ...props }) => <ul className="list-disc pl-6 my-2 space-y-1" {...props} />,
-          ol: ({ ...props }) => <ol className="list-decimal pl-6 my-2 space-y-1" {...props} />,
+          h1: ({ ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4 text-blue-800" {...props} />,
+          h2: ({ ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3 text-blue-800" {...props} />,
+          h3: ({ ...props }) => <h3 className="text-lg font-medium mt-4 mb-2 text-blue-800" {...props} />,
+          h4: ({ ...props }) => <h4 className="text-base font-medium mt-3 mb-2 text-blue-800" {...props} />,
+          h5: ({ ...props }) => <h5 className="text-sm font-medium mt-2 mb-1 text-blue-800" {...props} />,
+          h6: ({ ...props }) => <h6 className="text-xs font-medium mt-2 mb-1 text-blue-800" {...props} />,
+          p: ({ ...props }) => <p className="my-2 leading-relaxed text-gray-700" {...props} />,
+          ul: ({ ...props }) => <ul className="list-disc pl-6 my-2 space-y-1 text-gray-700" {...props} />,
+          ol: ({ ...props }) => <ol className="list-decimal pl-6 my-2 space-y-1 text-gray-700" {...props} />,
           li: ({ ...props }) => <li className="my-1" {...props} />,
           a: ({ href, children }) => (
             <a
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#002341] hover:underline"
+              className="text-blue-600 hover:underline"
             >
               {children}
             </a>
           ),
           blockquote: ({ ...props }) => (
-            <blockquote className="border-l-4 border-gray-300 pl-4 italic my-2" {...props} />
+            <blockquote className="border-l-4 border-blue-300 pl-4 italic my-2 text-gray-600" {...props} />
           ),
           code: ({ className, children, ...props }) => {
             const match = /language-(\w+)/.exec(className || '')
@@ -95,7 +95,7 @@ function MessageComponentBase({ message }: { message: Message }) {
                 </code>
               </pre>
             ) : (
-              <code className="bg-gray-100 rounded px-1 py-0.5" {...props}>
+              <code className="bg-gray-100 rounded px-1 py-0.5 text-sm" {...props}>
                 {children}
               </code>
             )
@@ -140,8 +140,39 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const [threadID, setThreadID] = useState<string | null>(threadId || null)
   const initializationRef = useRef(false)
+  const [textareaHeight, setTextareaHeight] = useState('auto')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  const chatStyles = {
+    container: "flex flex-col h-screen bg-gray-50",
+    header: "bg-white shadow-md py-4 px-6 flex items-center justify-between",
+    logo: "flex items-center",
+    title: "text-2xl font-bold text-blue-800",
+    subtitle: "text-sm text-gray-500",
+    homeButton: "bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors",
+    chatArea: "flex-1 overflow-y-auto p-6",
+    inputArea: "bg-white border-t border-gray-200 p-4",
+    inputContainer: "max-w-3xl mx-auto",
+    dropdownButton: "w-full bg-gray-100 text-blue-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors flex justify-between items-center mb-3",
+    suggestionList: "absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg",
+    suggestionItem: "block w-full text-left px-4 py-2 text-sm text-blue-800 hover:bg-gray-100 transition-colors",
+    textarea: "w-full p-3 pr-14 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none overflow-hidden",
+    sendButton: "absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors flex items-center justify-center",
+  }
+
+  // Modal styles
+  const modalStyles = {
+    overlay: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4",
+    container: "bg-white rounded-lg p-6 max-w-md w-full",
+    title: "text-xl font-semibold mb-4 text-blue-800",
+    text: "mb-4 text-gray-700",
+    button: "block w-full text-left px-4 py-2 text-sm text-blue-800 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors",
+    input: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
+    submitButton: "w-full p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors",
+    cancelButton: "w-full p-2 mt-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors",
+  }
+
+  
   // メッセージをデータベースに保存する関数
   const saveMessageToDatabase = useCallback(async (message: Message) => {
     if (!sessionId) {
@@ -410,14 +441,25 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
     initialize();
   }, [memoizedCheckLoginStatus, initializeChat, sessionId]);
 
-  // 選択肢をクリックした際のハンドラー
   const handleSuggestionClick = (suggestion: string) => {
     setInputMessage(suggestion)
     setIsDropdownOpen(false)
     if (textareaRef.current) {
       textareaRef.current.focus()
+      adjustTextareaHeight()
     }
   }
+
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+    }
+  }
+  
+  useEffect(() => {
+    adjustTextareaHeight()
+  }, [inputMessage])
 
   // 回答用APIをストリーミングで表示保存する数
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -547,7 +589,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
           margin-bottom: 0.5em;
           line-height: 1.2;
           font-weight: 600;
-          color: #002341;
+          color: #1e40af;
         }
         .markdown-content h1 {
           font-size: 1.5em;
@@ -584,19 +626,19 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
         }
         .markdown-content strong {
           font-weight: 600;
-          color: #002341;
+          color: #1e40af;
         }
         .markdown-content a {
-          color: #002341;
+          color: #2563eb;
           text-decoration: none;
         }
         .markdown-content a:hover {
           text-decoration: underline;
         }
         .markdown-content blockquote {
-          border-left: 4px solid #e5e7eb;
+          border-left: 4px solid #93c5fd;
           padding-left: 1em;
-          color: #4a5568;
+          color: #4b5563;
           font-style: italic;
         }
         .markdown-content code {
@@ -612,9 +654,9 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
           overflow-x: auto;
         }
       `}</style>
-      <div className="flex flex-col h-screen bg-gray-50">
-        <header className="bg-white shadow-sm py-4 px-6 flex items-center justify-between">
-          <div className="flex items-center">
+      <div className={chatStyles.container}>
+        <header className={chatStyles.header}>
+          <div className={chatStyles.logo}>
             <Image
               src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/sign/Healthle/aicon100_1010.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJIZWFsdGhsZS9haWNvbjEwMF8xMDEwLnBuZyIsImlhdCI6MTcyODU0NDIzNCwiZXhwIjoxODg2MjI0MjM0fQ.aYcgNRWaEdTPwxcvTOjMZgnAmYrLx6VafwQ_uHuvx0w&t=2024-10-10T07%3A10%3A35.946Z`}
               alt="Healthleロゴ"
@@ -623,29 +665,29 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
               className="mr-3"
             />
             <div>
-              <h1 className="text-2xl font-semibold text-[#002341]">Healthle</h1>
-              <p className="text-sm text-gray-500">へルスル</p>
+              <h1 className={chatStyles.title}>Healthle</h1>
+              <p className={chatStyles.subtitle}>へルスル</p>
             </div>
           </div>
-          <Link
-            href="/"
-            className="bg-[#002341] text-white p-2 rounded-full hover:bg-opacity-90 transition-colors"
-          >
+          
+          <Link href="/" className={chatStyles.homeButton}>
             <Home className="w-5 h-5" />
             <span className="sr-only">ホームに戻る</span>
           </Link>
         </header>
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className={chatStyles.chatArea}>
           <div className="max-w-3xl mx-auto space-y-4">
-            {renderedMessages}
+            {messages.map((message) => (
+              <MessageComponent key={message.id} message={message} />
+            ))}
           </div>
         </div>
-        <div className={`bg-white border-t border-gray-200 p-4 ${isDropdownOpen ? 'mb-4' : ''}`}>
-          <div className="max-w-3xl mx-auto">
+        <div className={chatStyles.inputArea}>
+          <div className={chatStyles.inputContainer}>
             <div className="relative mb-3" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full bg-[#F0F0F0] text-[#002341] px-4 py-2 rounded-lg text-sm hover:bg-[#E6E6E6] transition-colors flex justify-between items-center"
+                className={chatStyles.dropdownButton}
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="true"
               >
@@ -655,7 +697,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
               {isDropdownOpen && suggestionContent && (
                 <div 
                   ref={suggestionsRef}
-                  className="absolute z-10 w-full bg-[#F8F8F8] border border-gray-200 rounded-lg shadow-lg"
+                  className={chatStyles.suggestionList}
                   role="menu"
                   aria-orientation="vertical"
                   aria-labelledby="options-menu"
@@ -664,7 +706,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
                     <button
                       key={index}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="block w-full text-left px-4 py-2 text-sm text-[#002341] hover:bg-[#E6E6E6] transition-colors"
+                      className={chatStyles.suggestionItem}
                       role="menuitem"
                     >
                       {suggestion}
@@ -678,16 +720,19 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
                 <textarea
                   ref={textareaRef}
                   value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
+                  onChange={(e) => {
+                    setInputMessage(e.target.value)
+                    adjustTextareaHeight()
+                  }}
                   placeholder="気になることはありますか？"
-                  className="w-full p-4 pr-12 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#002341] resize-none overflow-hidden"
+                  className={chatStyles.textarea}
                   disabled={isLoading}
                   rows={1}
-                  style={{ minHeight: '2.5rem', paddingRight: '3rem' }}
+                  style={{ minHeight: '2.5rem' }}
                 />
                 <button
                   type="submit"
-                  className={`absolute right-2 top-2 bg-[#002341] text-white p-2 rounded-full hover:bg-opacity-90 transition-colors flex items-center justify-center ${
+                  className={`${chatStyles.sendButton} ${
                     isLoading ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                   aria-label="送信"
@@ -702,17 +747,17 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
       </div>
 
       {showSurveyModal && !isLoggedIn && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-semibold mb-4">満足度調査</h2>
-            <p className="mb-4">より良いサービスを提供するために、満足度調査へのご協力をお願いします。</p>
-            <p className="mb-4">健康に悩んだ時にまた相談したいですか？</p>
+        <div className={modalStyles.overlay} role="dialog" aria-modal="true">
+          <div className={modalStyles.container}>
+            <h2 className={modalStyles.title}>満足度調査</h2>
+            <p className={modalStyles.text}>より良いサービスを提供するために、満足度調査へのご協力をお願いします。</p>
+            <p className={modalStyles.text}>健康に悩んだ時にまた相談したいですか？</p>
             <div className="space-y-2">
               {['凄く思う', '少し思う', 'あまり思わない', '全く思わない'].map((option) => (
                 <button
                   key={option}
                   onClick={() => handleSurveySubmit(option)}
-                  className="block w-full text-left px-4 py-2 text-sm text-[#002341] bg-[#E6EDF2] hover:bg-[#D1E0ED] rounded-lg transition-colors"
+                  className={modalStyles.button}
                 >
                   {option}
                 </button>
@@ -723,10 +768,10 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
       )}
 
       {showRegistrationModal && !isLoggedIn && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+        <div className={modalStyles.overlay} role="dialog" aria-modal="true">
+          <div className={modalStyles.container}>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">アウント登録</h2>
+              <h2 className={modalStyles.title}>アカウント登録</h2>
               <button
                 onClick={() => setShowRegistrationModal(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -735,8 +780,8 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <p className="mb-4">相談内容を記録し、後から見返すためにアカウント登録をしましょう！</p>
-            <p className="mb-4">本サービスの機能は全て無料でご利用いただけます。</p>
+            <p className={modalStyles.text}>相談内容を記録し、後から見返すためにアカウント登録をしましょう！</p>
+            <p className={modalStyles.text}>本サービスの機能は全て無料でご利用いただけます。</p>
             <form onSubmit={handleRegistrationSubmit} className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -748,7 +793,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#002341] focus:border-[#002341]"
+                  className={modalStyles.input}
                 />
               </div>
               <div>
@@ -761,7 +806,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#002341] focus:border-[#002341]"
+                  className={modalStyles.input}
                 />
               </div>
               <div>
@@ -774,7 +819,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#002341] focus:border-[#002341]"
+                  className={modalStyles.input}
                 />
               </div>
               {registrationError && (
@@ -782,14 +827,14 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
               )}
               <button
                 type="submit"
-                className="w-full p-2 bg-[#002341] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+                className={modalStyles.submitButton}
               >
                 登録する
               </button>
             </form>
             <button
               onClick={() => setShowRegistrationModal(false)}
-              className="w-full p-2 mt-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+              className={modalStyles.cancelButton}
             >
               今はしない
             </button>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { X, Menu, History, AlertCircle, LightbulbIcon, CheckCircle } from 'lucide-react'
+import { X, Menu, History, AlertCircle, LightbulbIcon, CheckCircle, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -32,24 +32,22 @@ interface ElementCheckResult {
 }
 
 const InputGuidelines = () => (
-  <div className="mb-4 bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-    <h3 className="text-sm font-semibold text-gray-600 p-2 border-b">入力ガイドライン：以下の要素を記載することで、より適切なアドバイスが得られます</h3>
-    <div className="p-3">
-      <ul className="list-none space-y-2">
-        {[
-          '症状の開始時期',
-          '症状の頻度',
-          '症状の程度',
-          'これまでに試した対策',
-          '生活への影響',
-          '求めている情報や助言'
-        ].map((item, index) => (
-          <li key={index} className="flex items-start">
-            <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
-            <span className="text-sm text-gray-600">{item}</span>
-          </li>
-        ))}
-      </ul>
+  <div className="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+    <h3 className="text-sm font-semibold text-gray-700 p-3 bg-gray-50 border-b">入力ガイドライン</h3>
+    <div className="p-4 grid grid-cols-2 gap-3">
+      {[
+        '症状の開始時期',
+        '症状の頻度',
+        '症状の程度',
+        'これまでの対策',
+        '生活への影響',
+        '求める情報や助言'
+      ].map((item, index) => (
+        <div key={index} className="flex items-start space-x-2 whitespace-nowrap">
+          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+          <span className="text-sm text-gray-600">{item}</span>
+        </div>
+      ))}
     </div>
   </div>
 )
@@ -230,7 +228,7 @@ export default function ImprovedHealthleDashboardComponent() {
 
       setConsultationExamples(data as ConsultationExample[])
     } catch (error) {
-      console.error('相談例���に失敗しました:', error)
+      console.error('相談例の取得に失敗しました:', error)
     }
   }
 
@@ -280,7 +278,6 @@ export default function ImprovedHealthleDashboardComponent() {
         textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition)
         setCursorPosition(newCursorPosition)
         adjustTextareaHeight()
-        scrollToBottom()
       }
     }
   }
@@ -292,17 +289,13 @@ export default function ImprovedHealthleDashboardComponent() {
     }
   }
 
-  const scrollToBottom = () => {
-    if (textareaRef.current) {
-      textareaRef.current.scrollTop = textareaRef.current.scrollHeight
-    }
-  }
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [consultationText, suggestion]);
 
   useEffect(() => {
     adjustTextareaHeight()
-    if (suggestion) {
-      scrollToBottom()
-    }
   }, [consultationText, suggestion])
 
   const handleSuggestionClose = () => {
@@ -337,7 +330,7 @@ export default function ImprovedHealthleDashboardComponent() {
       const { data: initialConsultationData, error: initialConsultationError } = await supabase
         .from('initial_consultations')
         .insert({ 
-          user_id: userId,  // userId が null の場合、これは自動的に NULL として扱われます
+          user_id: userId,
           consultation_text: consultationText 
         })
         .select()
@@ -357,7 +350,7 @@ export default function ImprovedHealthleDashboardComponent() {
         .from('chat_sessions')
         .insert({ 
           initial_consultation_id: initialConsultationId,
-          user_id: userId  // userId が null の場合、これは自動的に NULL として扱われます
+          user_id: userId
         })
         .select()
 
@@ -393,9 +386,9 @@ export default function ImprovedHealthleDashboardComponent() {
   }
 
   const MissingElementsAlert = () => {
-    if (!elementCheckResult) return null
+    if  (!elementCheckResult) return null
 
-    const  missingElements = []
+    const missingElements = []
     if (!elementCheckResult.symptomStart) missingElements.push('症状の開始時期')
     if (!elementCheckResult.symptomFrequency) missingElements.push('症状の頻度')
     if (!elementCheckResult.symptomSeverity) missingElements.push('症状の程度')
@@ -411,9 +404,12 @@ export default function ImprovedHealthleDashboardComponent() {
           <AlertCircle className="w-5 h-5 text-yellow-500 mr-2" />
           <h3 className="text-sm font-semibold text-yellow-700">以下の要素を追加すると、より適切なアドバイスが得られます：</h3>
         </div>
-        <ul className="list-disc list-inside text-sm text-yellow-600">
+        <ul className="grid grid-cols-2 gap-2 mt-2">
           {missingElements.map((element, index) => (
-            <li key={index}>{element}</li>
+            <li key={index} className="flex items-center text-sm text-yellow-600">
+              <ChevronRight className="w-4 h-4 mr-1 text-yellow-500" />
+              {element}
+            </li>
           ))}
         </ul>
       </div>
@@ -422,13 +418,14 @@ export default function ImprovedHealthleDashboardComponent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white text-gray-800 font-sans flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex items-center justify-center">
+        <div className="text-center bg-white p-8 rounded-lg shadow-md">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-4">エラーが発生しました</h1>
-          <p>{error}</p>
+          <p className="mb-6 text-gray-600">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2  bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             再読み込み
           </button>
@@ -448,43 +445,44 @@ export default function ImprovedHealthleDashboardComponent() {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="min-h-screen bg-white text-gray-800 font-sans flex flex-col"
+            className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col"
           >
-            <div className="bg-[#2C4179] text-white text-center py-3 px-4 text-sm font-semibold">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white text-center py-3 px-4 text-sm font-semibold shadow-md">
               24時間対応 | 即時回答 | 完全無料
             </div>
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow overflow-y-auto flex flex-col w-full">
-              <header className="flex justify-between items-center mb-6">
+              <header className="flex justify-between items-center mb-8">
                 <div className="flex items-center">
                   <Image 
                     src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/sign/Healthle/aicon100_1010.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJIZWFsdGhsZS9haWNvbjEwMF8xMDEwLnBuZyIsImlhdCI6MTcyODU0NDIzNCwiZXhwIjoxODg2MjI0MjM0fQ.aYcgNRWaEdTPwxcvTOjMZgnAmYrLx6VafwQ_uHuvx0w&t=2024-10-10T07%3A10%3A35.946Z`} 
                     alt="Healthle Logo" 
-                    width={32} 
-                    height={32} 
+                    width={40} 
+                    height={40} 
+                    className="rounded-full shadow-sm"
                   />
-                  <h1 className="text-xl font-bold text-[#2C4179] ml-2">Healthle <span className="text-xs font-normal text-gray-500">ヘルスル</span></h1>
+                  <h1 className="text-2xl font-bold text-blue-800 ml-3">Healthle <span className="text-xs font-normal text-gray-500">ヘルスル</span></h1>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex space-x-3">
                   <button
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2"
+                    className="p-2 rounded-full bg-white shadow-sm hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     aria-label="過去の相談"
                     onClick={handleViewPastConsultations}
                   >
-                    <History className="w-5 h-5 text-[#2C4179]" />
+                    <History className="w-6 h-6 text-blue-600" />
                   </button>
                   <button
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2"
+                    className="p-2 rounded-full bg-white shadow-sm hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     aria-label="設定"
                     onClick={handleMenuClick}
                   >
-                    <Menu className="w-5 h-5 text-[#2C4179]" />
+                    <Menu className="w-6 h-6 text-blue-600" />
                   </button>
                 </div>
               </header>
 
               <main className="flex-grow overflow-y-auto flex flex-col pb-24">
-                <h2 className="text-lg font-semibold mb-3 text-[#2C4179]">相談内容</h2>
-                <div className="rounded-lg overflow-hidden mb-4">
+                <h2 className="text-xl font-semibold mb-4 text-blue-800">相談内容</h2>
+                <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
                   <div className="border-2 border-gray-200 rounded-lg p-3 bg-white relative">
                     <label htmlFor="consultationInput" className="sr-only">相談内容を入力</label>
                     <textarea
@@ -539,9 +537,9 @@ export default function ImprovedHealthleDashboardComponent() {
                   <MissingElementsAlert />
                 </div>
                 {consultationExamples.length > 0 && (
-                  <div className="mb-4 bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                    <h3 className="text-sm font-semibold text-gray-600 p-2 border-b">相談例：</h3>
-                    <div className="p-3">
+                  <div className="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                    <h3 className="text-sm font-semibold text-gray-700 p-3 bg-gray-50 border-b">相談例：</h3>
+                    <div className="p-4">
                       <AnimatePresence mode="wait">
                         <motion.div
                           key={currentExampleIndex}
@@ -553,7 +551,7 @@ export default function ImprovedHealthleDashboardComponent() {
                         >
                           <button
                             onClick={() => handleExampleClick(consultationExamples[currentExampleIndex].content)}
-                            className="w-full text-left hover:bg-gray-100 focus:outline-none focus:bg-gray-100 transition-colors rounded p-2"
+                            className="w-full text-left hover:bg-blue-50 focus:outline-none focus:bg-blue-50 transition-colors rounded-md p-3"
                           >
                             {consultationExamples[currentExampleIndex].content}
                           </button>
@@ -566,19 +564,19 @@ export default function ImprovedHealthleDashboardComponent() {
               </main>
             </div>
 
-            <div className="fixed bottom-0 left-0 right-0 bg-white p-2 sm:p-3 shadow-md z-10">
-              <div className="max-w-5xl mx-auto px-2 sm:px-4 lg:px-6">
-                <p className="text-center text-xs text-gray-600 mb-2">
+            <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg z-10">
+              <div className="max-w-5xl mx-auto">
+                <p className="text-center text-xs text-gray-600 mb-3">
                   <button
                     onClick={() => fetchLegalDocument('terms_of_service')}
-                    className="text-[#2C4179] hover:underline mr-1 focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2 rounded"
+                    className="text-blue-600 hover:underline mr-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
                   >
                     利用規約
                   </button>
                   と
                   <button
                     onClick={() => fetchLegalDocument('privacy_policy')}
-                    className="text-[#2C4179] hover:underline ml-1 focus:outline-none focus:ring-2 focus:ring-[#2C4179] focus:ring-offset-2 rounded"
+                    className="text-blue-600 hover:underline ml-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
                   >
                     プライバシーポリシー
                   </button>
@@ -587,9 +585,9 @@ export default function ImprovedHealthleDashboardComponent() {
                 <form onSubmit={handleStartConsultation} className="w-full">
                   <button
                     type="submit"
-                    className={`w-full rounded-lg py-3 font-semibold text-base transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                    className={`w-full rounded-lg py-4 font-semibold text-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                       consultationText && !isLoading
-                        ? 'bg-[#2C4179] text-white hover:bg-opacity-90 focus:ring-[#2C4179]'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-md'
                         : 'bg-gray-200 text-gray-500 cursor-not-allowed focus:ring-gray-400'
                     }`}
                     disabled={!consultationText || isLoading}
@@ -602,15 +600,15 @@ export default function ImprovedHealthleDashboardComponent() {
 
             {showModal && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-lg p-4 w-full max-w-md max-h-[80vh] overflow-y-auto">
-                  <div className="flex justify-between items-center mb-3">
-                    <h2 className="text-lg font-semibold">{modalTitle}</h2>
-                    <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#2C4179] rounded">
-                      <X className="w-5 h-5" />
+                <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800">{modalTitle}</h2>
+                    <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded">
+                      <X className="w-6 h-6" />
                     </button>
                   </div>
                   <div className="prose max-w-none">
-                    <pre className="whitespace-pre-wrap text-sm">{modalContent}</pre>
+                    <pre className="whitespace-pre-wrap text-sm text-gray-600">{modalContent}</pre>
                   </div>
                 </div>
               </div>

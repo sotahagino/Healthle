@@ -31,13 +31,13 @@ interface SuggestionContent {
 }
 
 const MessageComponent = React.memo(({ message }: { message: Message }) => (
-  <div className="my-4 p-4 bg-white rounded-lg shadow">
+  <div className={`my-4 p-4 rounded-lg shadow-md ${message.sender === 'user' ? 'bg-blue-50' : 'bg-white'}`}>
     <div className="flex items-center mb-2">
       {message.sender === 'user' ? (
         message.isQuestion ? (
-          <HelpCircle className="w-6 h-6 mr-2 text-[#002341]" />
+          <HelpCircle className="w-6 h-6 mr-2 text-blue-600" />
         ) : (
-          <User className="w-6 h-6 mr-2 text-[#002341]" />
+          <User className="w-6 h-6 mr-2 text-blue-600" />
         )
       ) : (
         <Image
@@ -48,41 +48,41 @@ const MessageComponent = React.memo(({ message }: { message: Message }) => (
           className="mr-2"
         />
       )}
-      <p className="text-lg font-semibold text-[#002341]">
+      <p className="text-lg font-semibold text-blue-800">
         {message.sender === 'user'
           ? message.isQuestion
             ? '質問'
             : 'お悩み'
           : '回答'}
       </p>
-      </div>
+    </div>
     <ReactMarkdown
       className="prose max-w-none markdown-content"
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeRaw]}
       components={{
-        h1: ({ ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
-        h2: ({ ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
-        h3: ({ ...props }) => <h3 className="text-lg font-medium mt-4 mb-2" {...props} />,
-        h4: ({ ...props }) => <h4 className="text-base font-medium mt-3 mb-2" {...props} />,
-        h5: ({ ...props }) => <h5 className="text-sm font-medium mt-2 mb-1" {...props} />,
-        h6: ({ ...props }) => <h6 className="text-xs font-medium mt-2 mb-1" {...props} />,
-        p: ({ ...props }) => <p className="my-2 leading-relaxed" {...props} />,
-        ul: ({ ...props }) => <ul className="list-disc pl-6 my-2 space-y-1" {...props} />,
-        ol: ({ ...props }) => <ol className="list-decimal pl-6 my-2 space-y-1" {...props} />,
+        h1: ({ ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4 text-blue-800" {...props} />,
+        h2: ({ ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3 text-blue-800" {...props} />,
+        h3: ({ ...props }) => <h3 className="text-lg font-medium mt-4 mb-2 text-blue-800" {...props} />,
+        h4: ({ ...props }) => <h4 className="text-base font-medium mt-3 mb-2 text-blue-800" {...props} />,
+        h5: ({ ...props }) => <h5 className="text-sm font-medium mt-2 mb-1 text-blue-800" {...props} />,
+        h6: ({ ...props }) => <h6 className="text-xs font-medium mt-2 mb-1 text-blue-800" {...props} />,
+        p: ({ ...props }) => <p className="my-2 leading-relaxed text-gray-700" {...props} />,
+        ul: ({ ...props }) => <ul className="list-disc pl-6 my-2 space-y-1 text-gray-700" {...props} />,
+        ol: ({ ...props }) => <ol className="list-decimal pl-6 my-2 space-y-1 text-gray-700" {...props} />,
         li: ({ ...props }) => <li className="my-1" {...props} />,
         a: ({ href, children }) => (
           <a
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#002341] hover:underline"
+            className="text-blue-600 hover:underline"
           >
             {children}
           </a>
         ),
         blockquote: ({ ...props }) => (
-          <blockquote className="border-l-4 border-gray-300 pl-4 italic my-2" {...props} />
+          <blockquote className="border-l-4 border-blue-300 pl-4 italic my-2 text-gray-600" {...props} />
         ),
         code: ({ className, children, ...props }) => {
           const match = /language-(\w+)/.exec(className || '')
@@ -93,7 +93,7 @@ const MessageComponent = React.memo(({ message }: { message: Message }) => (
               </code>
             </pre>
           ) : (
-            <code className="bg-gray-100 rounded px-1 py-0.5" {...props}>
+            <code className="bg-gray-100 rounded px-1 py-0.5 text-sm" {...props}>
               {children}
             </code>
           )
@@ -386,7 +386,7 @@ export default function ChatHistory({ threadId = null }: { threadId?: string | n
           margin-bottom: 0.5em;
           line-height: 1.2;
           font-weight: 600;
-          color: #002341;
+          color: #1e40af;
         }
         .markdown-content h1 {
           font-size: 1.5em;
@@ -423,19 +423,19 @@ export default function ChatHistory({ threadId = null }: { threadId?: string | n
         }
         .markdown-content strong {
           font-weight: 600;
-          color: #002341;
+          color: #1e40af;
         }
         .markdown-content a {
-          color: #002341;
+          color: #2563eb;
           text-decoration: none;
         }
         .markdown-content a:hover {
           text-decoration: underline;
         }
         .markdown-content blockquote {
-          border-left: 4px solid #e5e7eb;
+          border-left: 4px solid #93c5fd;
           padding-left: 1em;
-          color: #4a5568;
+          color: #4b5563;
           font-style: italic;
         }
         .markdown-content code {
@@ -452,99 +452,96 @@ export default function ChatHistory({ threadId = null }: { threadId?: string | n
         }
       `}</style>
       <div className="flex flex-col h-screen bg-gray-50">
-      <header className="bg-white shadow-sm py-4 px-6 flex items-center justify-between">
-        <div className="flex items-center">
-          <Image
-            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/sign/Healthle/aicon100_1010.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJIZWFsdGhsZS9haWNvbjEwMF8xMDEwLnBuZyIsImlhdCI6MTcyODU0NDIzNCwiZXhwIjoxODg2MjI0MjM0fQ.aYcgNRWaEdTPwxcvTOjMZgnAmYrLx6VafwQ_uHuvx0w&t=2024-10-10T07%3A10%3A35.946Z`}
-            alt="Healthleロゴ"
-            width={40}
-            height={40}
-            className="mr-3"
-          />
-          <div>
-            <h1 className="text-2xl font-semibold text-[#002341]">Healthle</h1>
-            <p className="text-sm text-gray-500">ヘルスル</p>
-          </div>
-        </div>
-        <Link
-          href="/"
-          className="bg-[#002341] text-white p-2 rounded-full hover:bg-opacity-90 transition-colors"
-        >
-          <Home className="w-5 h-5" />
-          <span className="sr-only">ホームに戻る</span>
-        </Link>
-      </header>
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-3xl mx-auto space-y-4">
-          {error && (
-            <div className="text-red-500 mb-4">
-              {error}
+        <header className="bg-white shadow-md py-4 px-6 flex items-center justify-between">
+          <div className="flex items-center">
+            <Image
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/sign/Healthle/aicon100_1010.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJIZWFsdGhsZS9haWNvbjEwMF8xMDEwLnBuZyIsImlhdCI6MTcyODU0NDIzNCwiZXhwIjoxODg2MjI0MjM0fQ.aYcgNRWaEdTPwxcvTOjMZgnAmYrLx6VafwQ_uHuvx0w&t=2024-10-10T07%3A10%3A35.946Z`}
+              alt="Healthleロゴ"
+              width={40}
+              height={40}
+              className="mr-3"
+            />
+            <div>
+              <h1 className="text-2xl font-bold text-blue-800">Healthle</h1>
+              <p className="text-sm text-gray-500">ヘルスル</p>
             </div>
-          )}
-          {renderedMessages}
-        </div>
-      </div>
-      <div className={`bg-white border-t border-gray-200 p-4 ${isDropdownOpen ? 'mb-4' : ''}`}>
-        <div className="max-w-3xl mx-auto">
-          <div className="relative mb-3" ref={dropdownRef}>
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full bg-[#F0F0F0] text-[#002341] px-4 py-2 rounded-lg text-sm hover:bg-[#E6E6E6] transition-colors flex justify-between items-center"
-              
-              aria-expanded={isDropdownOpen}
-              aria-haspopup="true"
-            >
-              <span>質問の候補</span>
-              {isDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-            {isDropdownOpen && suggestionContent && (
-              <div 
-                ref={suggestionsRef}
-                className="absolute z-10 w-full bg-[#F8F8F8] border border-gray-200 rounded-lg shadow-lg"
-                role="menu"
-                aria-orientation="vertical"
-                aria-labelledby="options-menu"
-              >
-                {Object.values(suggestionContent).map((suggestion, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="block w-full text-left px-4 py-2 text-sm text-[#002341] hover:bg-[#E6E6E6] transition-colors"
-                    role="menuitem"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
+          </div>
+          <Link href="/" className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors">
+            <Home className="w-5 h-5" />
+            <span className="sr-only">ホームに戻る</span>
+          </Link>
+        </header>
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-3xl mx-auto space-y-4">
+            {error && (
+              <div className="text-red-500 bg-red-100 border border-red-400 rounded-md p-4 mb-4">
+                {error}
               </div>
             )}
+            {renderedMessages}
           </div>
-          <form onSubmit={handleSendMessage} className="flex items-end">
-            <div className="relative flex-1">
-              <textarea
-                ref={textareaRef}
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="気になることはありますか？"
-                className="w-full p-4 pr-12 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#002341] resize-none overflow-hidden"
-                disabled={isLoading}
-                rows={1}
-                style={{ minHeight: '2.5rem', paddingRight: '3rem' }}
-              />
+        </div>
+        <div className="bg-white border-t border-gray-200 p-4">
+          <div className="max-w-3xl mx-auto">
+            <div className="relative mb-3" ref={dropdownRef}>
               <button
-                type="submit"
-                className={`absolute right-2 top-2 bg-[#002341] text-white p-2 rounded-full hover:bg-opacity-90 transition-colors flex items-center justify-center ${
-                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-                aria-label="送信"
-                disabled={isLoading}
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full bg-gray-100 text-blue-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors flex justify-between items-center"
+                aria-expanded={isDropdownOpen}
+                aria-haspopup="true"
               >
-                <Send className="w-5 h-5" />
+                <span>質問の候補</span>
+                {isDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
+              {isDropdownOpen && suggestionContent && (
+                <div 
+                  ref={suggestionsRef}
+                  className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1"
+                  role="menu"
+                  aria-orientation="vertical"
+                  aria-labelledby="options-menu"
+                >
+                  
+                  {Object.values(suggestionContent).map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="block w-full text-left px-4 py-2 text-sm text-blue-800 hover:bg-gray-100 transition-colors"
+                      role="menuitem"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          </form>
+            <form onSubmit={handleSendMessage} className="flex items-end">
+              <div className="relative flex-1">
+                <textarea
+                  ref={textareaRef}
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  placeholder="気になることはありますか？"
+                  className="w-full p-4 pr-14 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none overflow-hidden"
+                  disabled={isLoading}
+                  rows={1}
+                  style={{ minHeight: '2.5rem', paddingRight: '3rem' }}
+                />
+                <button
+                  type="submit"
+                  className={`absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors flex items-center justify-center ${
+                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  aria-label="送信"
+                  disabled={isLoading}
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
     </>
   )
 }
