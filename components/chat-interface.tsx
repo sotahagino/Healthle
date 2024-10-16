@@ -179,7 +179,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
     }
   
     // "準備中" メッセージは保存しない
-    if (message.text === '回答を準備中です...') {
+    if (message.text === '回答を準備中です。少々お待ちください。...') {
       return
     }
   
@@ -267,7 +267,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
     }
   }, []);
 
-  // 回答用APIからのストリーミングレスポンスを理する関数
+  // 回答用APIからのストリーミングレスポンスを処理する関数
   const streamResponse = useCallback(async (message: string, messageId: string, threadId: string | null) => {
     try {
       console.log('APIにリクエストを送信中:', process.env.NEXT_PUBLIC_WEBASSISTANT_URL)
@@ -285,6 +285,8 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
+  
+      
   
       const newThreadId = response.headers.get('x-thread-id')
       if (newThreadId) {
@@ -347,7 +349,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
             })
             console.log('AIメッセージが保存されました:', savedMessage)
           } catch (error) {
-            console.error('AIメッセージの保存中にエラーが発しました:', error)
+            console.error('AIメッセージの保存中にエラーが発生しました:', error)
           }
         } else {
           console.warn('チャットセッションIDがないため、AIの応答を保存できません')
@@ -390,11 +392,10 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
           addMessage(sessionData.initial_consultations.consultation_text, 'user', false)
           
           // ②お悩みをchat_messagesに保存
-          // 既にaddMessage関数で保存されていす
+          // 既にaddMessage関数で保存されています
           
           // ③ユーザーの相談内容を元に回答用APIを実行
-          setIsLoading(true)
-          const aiMessageId = addMessage('回答を準備中です...', 'ai')
+          const aiMessageId = addMessage('回答を準備中です。少々お待ちください。...', 'ai')
           
           const initialPrompt = `
             ユーザーの相談内容:
@@ -407,7 +408,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
         }
       }
     } catch (error) {
-      console.error('チャットの初期化中にエラーが生しました:', error)
+      console.error('チャットの初期化中にエラーが発生しました:', error)
       setError('データの取得に失敗しました。リロードをお願いします。')
     } finally {
       setIsLoading(false)
@@ -461,7 +462,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
     adjustTextareaHeight()
   }, [inputMessage])
 
-  // 回答用APIをストリーミングで表示保存する数
+  // 回答用APIをストリーミングで表示保存する関数
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (inputMessage.trim() === '' || isLoading) return
@@ -470,7 +471,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
     setInputMessage('')
     setIsLoading(true)
 
-    const aiMessageId = addMessage('回答を準備中です...', 'ai')
+    const aiMessageId = addMessage('回答を準備中です。少々お待ちください。...', 'ai')
 
     try {
       await streamResponse(inputMessage, aiMessageId, threadID)
@@ -670,7 +671,6 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
         <div className={chatStyles.chatArea}>
           <div className="max-w-3xl mx-auto space-y-4">
             {messages.map((message) => (
-              
               <MessageComponent key={message.id} message={message} />
             ))}
           </div>
