@@ -651,7 +651,7 @@ export default function ChatInterface({ threadId, initialMessages = [] }: ChatIn
         <header className={chatStyles.header}>
           <div className={chatStyles.logo}>
             <Image
-              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/sign/Healthle/aicon100_1010.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJIZWFsdGhsZS9haWNvbjEwMF8xMDEwLnBuZyIsImlhdCI6MTcyODU0NDIzNCwiZXhwIjoxODg2MjI0MjM0fQ.aYcgNRWaEdTPwxcvTOjMZgnAmYrLx6VafwQ_uHuvx0w&t=2024-10-10T07%3A10%3A35.946Z`}
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle/aicon_v3_100_1017.png?t=2024-10-17T02%3A45%3A47.798Z`}
               alt="Healthleロゴ"
               width={40}
               height={40}

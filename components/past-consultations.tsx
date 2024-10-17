@@ -238,7 +238,7 @@ export default function PastConsultations() {
               <ChevronLeft className="w-5 h-5 text-[#2C4179]" />
             </button>
             <Image 
-              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle/aicon100_1010.png?t=2024-10-10T13%3A50%3A50.827Z`}
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle/aicon_v3_100_1017.png?t=2024-10-17T02%3A45%3A47.798Z`}
               alt="Healthle Logo" 
               width={32} 
               height={32} 

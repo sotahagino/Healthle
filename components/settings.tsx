@@ -129,7 +129,7 @@ export default function SettingsPage() {
         <div className="p-6 bg-gray-50 mt-6">
           <div className="flex items-center mb-6">
             <Image
-              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle/aicon100_1010.png`}
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/Healthle/aicon_v3_100_1017.png?t=2024-10-17T02%3A45%3A47.798Z`}
               alt="Healthle Logo"
               width={48}
               height={48}
